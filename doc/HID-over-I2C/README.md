@@ -60,7 +60,7 @@ PC (USB HID Host) ←USB→ M487 Bridge ←I²C→ HID-over-I²C Device
 - [x] **Phase 2: HID Descriptor Parser** — Complete (`firmware/hid-over-i2c/src/hid_parser.c`)
 - [x] **Phase 3: USB HID Device Layer** — Complete (`firmware/hid-over-i2c/src/usb_hid.c`)
 - [x] **Phase 4: Translation Layer** — Complete (`firmware/hid-over-i2c/src/bridge.c`)
-- [ ] **Phase 5: Integration & Build** — Pending (BSP API compatibility)
+- [x] **Phase 5: Integration & Build** — ✅ Compiles (43.3KB), USB HID is stub
 
 ---
 
