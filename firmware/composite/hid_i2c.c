@@ -15,6 +15,8 @@
 #include <string.h>
 #include "NuMicro.h"
 #include "hid_i2c.h"
+#include "i2c_constants.h"
+#include "i2c_error.h"
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* UI2C0 (USCI_I2C) Macros                                                                                 */
@@ -266,9 +268,19 @@ void EPA_Handler(void)  /* Interrupt IN handler */
 void EPB_Handler(void)  /* Interrupt OUT handler */
 {
     uint32_t len, i;
+    
     len = HSUSBD->EP[EPB].EPDATCNT & 0xffff;
-    for (i = 0; i < len; i++)
+    
+    /* T022: Buffer boundary check - validate length before copying */
+    if (len == 0 || len > EPB_MAX_PKT_SIZE) {
+        /* Invalid length - discard and return */
+        return;
+    }
+    
+    /* Copy data with explicit bounds checking */
+    for (i = 0; i < len && i < sizeof(g_u8OutBuff); i++)
         g_u8OutBuff[i] = HSUSBD->EP[EPB].EPDAT_BYTE;
+    
     HID_GetOutReport(g_u8OutBuff, len);
 }
 
@@ -701,19 +713,24 @@ int32_t HID_CmdI2CWrite(CMD_T *pCmd)
 {
     uint8_t slaveAddr = pCmd->u8Data[0] & 0x7F;
     uint8_t len = pCmd->u8Data[1];
-    if (len > I2C_MAX_WRITE_LEN) len = I2C_MAX_WRITE_LEN;
+    
+    /* T022: Buffer bounds check for read length */
+    if (len > I2C_MAX_WRITE_LEN) 
+        len = I2C_MAX_WRITE_LEN;
 
+    /* T015: Use unified error codes */
     int32_t ret = I2C_Write(slaveAddr, &pCmd->u8Data[2], len);
 
     pCmd->u8Cmd = HID_CMD_NONE;
-    pCmd->u8Data[0] = (ret == 0) ? 0x00 : 0x01;  /* status */
+    pCmd->u8Data[0] = (ret == I2C_OK) ? 0x00 : 0x01;  /* status */
     pCmd->u8Data[1] = len;
 
     /* Send response via HID IN */
     {
         uint32_t txLen = 2;
         uint32_t i;
-        for (i = 0; i < txLen; i++)
+        /* T022: Bounds check for TX buffer */
+        for (i = 0; i < txLen && i < sizeof(pCmd->u8Data); i++)
             HSUSBD->EP[EPA].EPDAT_BYTE = pCmd->u8Data[i];
         HSUSBD->EP[EPA].EPTXCNT = txLen;
         HSUSBD_ENABLE_EP_INT(EPA, HSUSBD_EPINTEN_INTKIEN_Msk);
@@ -726,24 +743,32 @@ int32_t HID_CmdI2CRead(CMD_T *pCmd)
 {
     uint8_t slaveAddr = pCmd->u8Data[0] & 0x7F;
     uint8_t len = pCmd->u8Data[1];
-    if (len > I2C_MAX_READ_LEN) len = I2C_MAX_READ_LEN;
+    
+    /* T022: Buffer bounds check for read length */
+    if (len > I2C_MAX_READ_LEN) 
+        len = I2C_MAX_READ_LEN;
 
+    /* T022: Fixed-size buffer with bounds check */
     uint8_t readData[64];
-    int32_t ret = I2C_Read(slaveAddr, readData, len);
+    uint8_t actualLen = (len < sizeof(readData)) ? len : sizeof(readData);
+    
+    int32_t ret = I2C_Read(slaveAddr, readData, actualLen);
 
     pCmd->u8Cmd = HID_CMD_NONE;
-    pCmd->u8Data[0] = (ret == 0) ? 0x00 : 0x01;  /* status */
-    pCmd->u8Data[1] = (ret == 0) ? len : 0;
+    pCmd->u8Data[0] = (ret >= I2C_OK) ? 0x00 : 0x01;  /* status */
+    pCmd->u8Data[1] = (ret >= I2C_OK) ? (uint8_t)ret : 0;
 
     /* Send response via HID IN */
     {
-        uint32_t txLen = 2 + ((ret == 0) ? len : 0);
+        uint32_t txLen = 2 + ((ret >= I2C_OK) ? (uint32_t)actualLen : 0);
         uint32_t i;
-        for (i = 0; i < txLen && i < 66; i++)
+        /* T022: Bounds check for TX buffer */
+        for (i = 0; i < txLen && i < sizeof(pCmd->u8Data); i++)
             HSUSBD->EP[EPA].EPDAT_BYTE = pCmd->u8Data[i];
-        if (ret == 0 && len > 0)
-            for (i = 0; i < len && (i + 2) < 66; i++)
+        if (ret >= I2C_OK && actualLen > 0) {
+            for (i = 0; i < actualLen && (i + 2) < sizeof(pCmd->u8Data); i++)
                 HSUSBD->EP[EPA].EPDAT_BYTE = readData[i];
+        }
         HSUSBD->EP[EPA].EPTXCNT = txLen;
         HSUSBD_ENABLE_EP_INT(EPA, HSUSBD_EPINTEN_INTKIEN_Msk);
     }
@@ -756,25 +781,32 @@ int32_t HID_CmdI2CWriteRead(CMD_T *pCmd)
     uint8_t slaveAddr = pCmd->u8Data[0] & 0x7F;
     uint8_t wlen = pCmd->u8Data[1];
     uint8_t rlen = pCmd->u8Data[2];
+    
+    /* T015: T022: Bounds check for lengths */
     if (wlen > I2C_MAX_WRITE_LEN) wlen = I2C_MAX_WRITE_LEN;
     if (rlen > I2C_MAX_READ_LEN) rlen = I2C_MAX_READ_LEN;
 
+    /* T022: Fixed-size buffer with bounds check */
     uint8_t readData[64];
-    int32_t ret = I2C_WriteRead(slaveAddr, &pCmd->u8Data[3], wlen, readData, rlen);
+    uint8_t actualRlen = (rlen < sizeof(readData)) ? rlen : sizeof(readData);
+    
+    int32_t ret = I2C_WriteRead(slaveAddr, &pCmd->u8Data[3], wlen, readData, actualRlen);
 
     pCmd->u8Cmd = HID_CMD_NONE;
-    pCmd->u8Data[0] = (ret == 0) ? 0x00 : 0x01;
-    pCmd->u8Data[1] = (ret == 0) ? rlen : 0;
+    pCmd->u8Data[0] = (ret == I2C_OK) ? 0x00 : 0x01;
+    pCmd->u8Data[1] = (ret == I2C_OK) ? actualRlen : 0;
 
     /* Send response via HID IN */
     {
-        uint32_t txLen = 2 + ((ret == 0) ? rlen : 0);
+        uint32_t txLen = 2 + ((ret == I2C_OK) ? (uint32_t)actualRlen : 0);
         uint32_t i;
-        for (i = 0; i < txLen && i < 66; i++)
+        /* T022: Bounds check for TX buffer */
+        for (i = 0; i < txLen && i < sizeof(pCmd->u8Data); i++)
             HSUSBD->EP[EPA].EPDAT_BYTE = pCmd->u8Data[i];
-        if (ret == 0 && rlen > 0)
-            for (i = 0; i < rlen && (i + 2) < 66; i++)
+        if (ret == I2C_OK && actualRlen > 0) {
+            for (i = 0; i < actualRlen && (i + 2) < sizeof(pCmd->u8Data); i++)
                 HSUSBD->EP[EPA].EPDAT_BYTE = readData[i];
+        }
         HSUSBD->EP[EPA].EPTXCNT = txLen;
         HSUSBD_ENABLE_EP_INT(EPA, HSUSBD_EPINTEN_INTKIEN_Msk);
     }
@@ -784,19 +816,24 @@ int32_t HID_CmdI2CWriteRead(CMD_T *pCmd)
 /* HID Report ID: I2C Scan */
 int32_t HID_CmdI2CScan(CMD_T *pCmd)
 {
-    uint8_t results[8] = {0};
-    int32_t count = I2C_Scan(results, 8);
+    uint8_t results[I2C_SCAN_RESULT_MAX];
+    uint8_t maxResults = sizeof(results);
+    int32_t count = I2C_Scan(results, maxResults);
     
     pCmd->u8Cmd = HID_CMD_NONE;
     pCmd->u8Data[0] = 0x00;  /* status OK */
-    pCmd->u8Data[1] = (uint8_t)count;
-    memcpy(&pCmd->u8Data[2], results, count > 8 ? 8 : count);
+    pCmd->u8Data[1] = (uint8_t)((count >= 0) ? count : 0);
+    
+    /* T022: Bounds check for memcpy count */
+    uint8_t copyCount = (count >= 0 && count < maxResults) ? (uint8_t)count : 0;
+    memcpy(&pCmd->u8Data[2], results, copyCount);
 
     /* Send response via HID IN */
     {
-        uint32_t txLen = 2 + count;
+        uint32_t txLen = 2 + copyCount;
         uint32_t i;
-        for (i = 0; i < txLen && i < 66; i++)
+        /* T022: Bounds check for TX buffer */
+        for (i = 0; i < txLen && i < sizeof(pCmd->u8Data); i++)
             HSUSBD->EP[EPA].EPDAT_BYTE = pCmd->u8Data[i];
         HSUSBD->EP[EPA].EPTXCNT = txLen;
         HSUSBD_ENABLE_EP_INT(EPA, HSUSBD_EPINTEN_INTKIEN_Msk);
