@@ -56,7 +56,11 @@ PC (USB HID Host) ←USB→ M487 Bridge ←I²C→ HID-over-I²C Device
 - [x] EXAMPLE.md — Complete
 - [x] TEST_PLAN.md — Complete
 - [x] REVIEW.md — Complete
-- [ ] **Implementation** — Pending
+- [x] **Phase 1: I2C Driver** — Complete (`firmware/hid-over-i2c/src/i2c_driver.c`)
+- [ ] **Phase 2: HID Descriptor Parser** — Pending
+- [ ] **Phase 3: USB HID Device Layer** — Pending
+- [ ] **Phase 4: Translation Layer** — Pending
+- [ ] **Phase 5: Integration** — Pending
 
 ---
 
