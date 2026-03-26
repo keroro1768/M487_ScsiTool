@@ -25,6 +25,9 @@
 ### 🧪 Test Plan
 - [`06-TestPlan/TEST_PLAN.md`](06-TestPlan/TEST_PLAN.md) — Testing Strategy & Test Cases
 
+### 🏆 Review
+- [`07-Review/REVIEW.md`](07-Review/REVIEW.md) — Review Checklist, Report Template & Process
+
 ---
 
 ## Quick Reference
@@ -40,18 +43,32 @@ PC (USB HID Host) ←USB→ M487 Bridge ←I²C→ HID-over-I²C Device
 | Protocol details | `03-Protocol/TRANSLATION.md` |
 | Register definitions | `04-Registers/REGISTERS.md` |
 | Test strategy | `06-TestPlan/TEST_PLAN.md` |
+| Review process | `07-Review/REVIEW.md` |
 
 ---
 
 ## Status
 
-- [x] SPEC.md — Complete (based on Microsoft HID-over-I2C spec)
-- [x] ARCHITECTURE.md — Complete (firmware layers, USB interface, I²C translation)
-- [x] TRANSLATION.md — Complete (all request types, timing, error handling)
-- [x] REGISTERS.md — Complete (buffer map, data structures, macros)
-- [ ] EXAMPLE.md — Complete (MLX90614 example)
-- [ ] TEST_PLAN.md — Complete
+- [x] SPEC.md — Complete
+- [x] ARCHITECTURE.md — Complete
+- [x] TRANSLATION.md — Complete
+- [x] REGISTERS.md — Complete
+- [x] EXAMPLE.md — Complete
+- [x] TEST_PLAN.md — Complete
+- [x] REVIEW.md — Complete
 - [ ] **Implementation** — Pending
+
+---
+
+## Review Policy
+
+**每個實作階段完成後必須 Review，產生報告，再依據報告修改。**
+
+- **程式碼 Review：** 每個模組實作完成
+- **整合 Review：** 模組整合後
+- **最終 Review：** 交付前
+
+詳見 [`07-Review/REVIEW.md`](07-Review/REVIEW.md)
 
 ---
 
@@ -62,3 +79,5 @@ PC (USB HID Host) ←USB→ M487 Bridge ←I²C→ HID-over-I²C Device
 3. **Phase 3:** USB HID device layer (enumeration, EP0, EP1, EP2)
 4. **Phase 4:** Translation layer (command builder, response parser)
 5. **Phase 5:** Integration & testing
+
+**每個 Phase 完成後 → Review → 產生報告 → 修復問題 → 下一 Phase**
