@@ -1,4 +1,134 @@
-# M487 USB Storage CLI Tool
+# M487 USB Storage + HID I2C Bridge
+
+Win32 C++ 工具，包含：
+1. **M487_ScsiTool**: USB Mass Storage CLI 工具 + Vendor Commands + I2C 控制
+2. **HID I2C Bridge**: 獨立的 HID I2C 控制工具（適用於 Composite Firmware）
+
+---
+
+## 專案結構
+
+```
+M487_ScsiTool/
+├── README.md                # 本文件
+├── CMakeLists.txt          # M487_ScsiTool 建置腳本
+├── include/                # M487_ScsiTool 標頭
+├── src/                    # M487_ScsiTool 原始碼
+├── firmware/              # M487 韌體原始碼
+│   ├── i2c_control.c/h   # I2C 控制（可整合進 MSC firmware）
+│   ├── composite/         # Composite Device (MSC + HID I2C)
+│   │   ├── main.c
+│   │   ├── hid_i2c.c/h
+│   │   ├── usb_descriptors.c/h
+│   │   └── README.md
+│   └── README.md          # 韌體整合說明
+└── hid_bridge/           # HID I2C Bridge 主機工具
+    ├── CMakeLists.txt
+    ├── include/
+    └── src/
+```
+
+---
+
+## 工具 1: M487_ScsiTool (USB Mass Storage + I2C)
+
+透過 USB Mass Storage Vendor Command 發送 I2C 控制命令。
+
+### 功能
+- **SCSI READ/WRITE**: 讀寫 Flash storage
+- **Vendor Commands**: I2C 控制（透過 SCSI vendor opcode 0xC0）
+- **速度測試**: 測試傳輸速度
+
+### 建置
+```powershell
+cd M487_ScsiTool
+mkdir build && cd build
+cmake .. -G "Visual Studio 17 2022" -A x64
+cmake --build . --config Release
+```
+
+### 指令
+```
+enumerate              # 列舉裝置
+connect               # 連接
+i2c-write <addr> <hex>  # I2C 寫入
+i2c-read <addr> <len>   # I2C 讀取
+i2c-writeread <addr> <whex> <rlen>  # I2C 寫入後讀取
+speed-read [sectors]     # 讀取速度測試
+speed-write [sectors]    # 寫入速度測試
+```
+
+---
+
+## 工具 2: HID I2C Bridge (獨立 HID 工具)
+
+適用於 Composite Firmware（MSC + HID I2C），使用標準 HID Reports。
+
+### 功能
+- **I2C Scan**: 掃描 I2C bus 上的裝置
+- **I2C Write/Read**: 標準 I2C 通訊
+- **I2C Write+Read**: 先寫入暫存器位址再讀取
+
+### 建置
+```powershell
+cd hid_bridge
+mkdir build && cd build
+cmake .. -G "Visual Studio 17 2022" -A x64
+cmake --build . --config Release
+```
+
+### 指令
+```
+enumerate, enum   # 列舉 HID I2C Bridge 裝置
+connect           # 連接到第一個裝置
+scan             # I2C bus 掃描
+write <addr> <hex>  # I2C 寫入
+read <addr> <len>    # I2C 讀取
+writeread <addr> <whex> <rlen>  # 寫入後讀取
+```
+
+---
+
+## Firmware 選項
+
+### 選項 A: MSC + Vendor Commands（現有）
+- 在 USB Mass Storage 基礎上新增 vendor command (0xC0)
+- 較簡單，但 HID 功能需透過 vendor command
+- 使用 M487_ScsiTool
+
+### 選項 B: Composite Device（新建議）
+- USB Mass Storage (MSC) + HID I2C Bridge 同時存在
+- Windows 自動識別 HID，plug-and-play
+- 使用 HID I2C Bridge 工具
+- 需要完整實作 USB descriptors 和 HID class
+
+---
+
+## USB 參數
+
+| 參數 | MSC | Composite |
+|------|-----|-----------|
+| VID | 0x0416 | 0x0416 |
+| PID | 0x501E | 0x5020 |
+| Interface 0 | Mass Storage | MSC |
+| Interface 1 | - | HID I2C Bridge |
+
+## I2C 參數
+
+| 參數 | 值 |
+|------|-----|
+| I2C Controller | UI2C0 (USCI_I2C) |
+| Pins | PE2=CLK, PE3=DAT0 |
+| Speed | 100 kHz (預設) |
+| Max Write | 60 bytes |
+| Max Read | 62 bytes |
+
+---
+
+## 韌體建置
+
+請參考 `firmware/` 資料夾中的 README.md
+
 
 Win32 C++ CLI 工具，透過 WinUSB 發送 SCSI 命令到 M487 USB Storage 設備。
 
