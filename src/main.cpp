@@ -28,11 +28,24 @@ void printHelp()
     std::cout << "    info                  - Show device info (capacity, etc.)\n";
     std::cout << "    inquiry               - SCSI INQUIRY\n";
     std::cout << "    read <lba> [count]    - SCSI READ (default count=1)\n";
-    std::cout << "    write <lba> <hex>      - SCSI WRITE pattern (e.g., 0x55AA)\n";
-    std::cout << "    vendor                - Vendor command: Read device string\n";
-    std::cout << "    vendor-verify <size>  - Write 0x55AA pattern via vendor, verify byte-swap\n";
-    std::cout << "    dump <lba> [count]     - Hex dump sectors\n";
+    std::cout << "    write <lba> <hex>     - SCSI WRITE pattern (e.g., 0x55AA)\n";
+    std::cout << "    dump <lba> [count]    - Hex dump sectors\n";
     std::cout << "    fill <lba> <count> <hex> - Fill sectors with pattern\n";
+    std::cout << "    \n";
+    std::cout << "  I2C Commands:\n";
+    std::cout << "    i2c-info              - I2C: Read device string via vendor cmd\n";
+    std::cout << "    i2c-write <addr> <hex> - I2C: Write data to slave\n";
+    std::cout << "    i2c-read <addr> <len> - I2C: Read bytes from slave\n";
+    std::cout << "    i2c-writeread <addr> <whex> <rlen> - I2C: Write then read\n";
+    std::cout << "    \n";
+    std::cout << "  Vendor Commands:\n";
+    std::cout << "    vendor                - Vendor command: Read device string\n";
+    std::cout << "    vendor-verify <size>  - Test byte-swap functionality\n";
+    std::cout << "    \n";
+    std::cout << "  Speed Test:\n";
+    std::cout << "    speed-read [sectors]  - Test SCSI READ speed\n";
+    std::cout << "    speed-write [sectors] - Test SCSI WRITE speed\n";
+    std::cout << "    \n";
     std::cout << "    help                  - Show this help\n";
     std::cout << "    exit, quit            - Exit program\n";
     std::cout << "\n";
@@ -76,6 +89,13 @@ std::vector<uint8_t> parseHexString(const std::string& hexStr)
     }
 
     return result;
+}
+
+std::string toHex(uint8_t val)
+{
+    std::ostringstream oss;
+    oss << std::uppercase << std::hex << std::setw(2) << std::setfill('0') << (int)val;
+    return oss.str();
 }
 
 std::string bytesToHex(const uint8_t* data, size_t length, size_t maxBytes = 256)
@@ -403,6 +423,165 @@ int main()
 
             auto result = device.scsiWrite10(lba, count, writeData.data());
             printScsiResult("FILL (LBA=" + std::to_string(lba) + ", count=" + std::to_string(count) + ")", result);
+        }
+        else if (cmdLower == "i2c-info") {
+            if (!device.isConnected()) {
+                std::cout << "  Not connected. Use 'connect' first.\n";
+                continue;
+            }
+            auto result = device.vendorReadString(512);
+            printScsiResult("I2C INFO (vendor 0xC0 sub-cmd 0x00)", result);
+            if (result.success && !result.data.empty()) {
+                std::string str(reinterpret_cast<const char*>(result.data.data()), result.data.size());
+                size_t end = str.find('\0');
+                if (end != std::string::npos) str.resize(end);
+                std::cout << "  Device String: \"" << str << "\"\n";
+                std::cout << "  Expected:      \"ELAN-USB-I2C-BRIDGE-V0.1\"\n";
+            }
+        }
+        else if (cmdLower == "i2c-write") {
+            if (!device.isConnected()) {
+                std::cout << "  Not connected. Use 'connect' first.\n";
+                continue;
+            }
+            uint8_t addr = 0;
+            std::string hexStr;
+            iss >> std::hex >> addr >> hexStr;
+
+            if (hexStr.empty()) {
+                std::cout << "  Usage: i2c-write <addr> <hex_data>\n";
+                std::cout << "  Example: i2c-write 0x3C 0x00011234\n";
+                continue;
+            }
+
+            auto data = parseHexString(hexStr);
+            if (data.empty()) {
+                std::cout << "  Invalid hex data\n";
+                continue;
+            }
+
+            auto result = device.i2cWrite(addr, data.data(), static_cast<uint16_t>(data.size()));
+            printScsiResult("I2C WRITE (addr=0x" + toHex(addr) + ", len=" + std::to_string(data.size()) + ")", result);
+        }
+        else if (cmdLower == "i2c-read") {
+            if (!device.isConnected()) {
+                std::cout << "  Not connected. Use 'connect' first.\n";
+                continue;
+            }
+            uint8_t addr = 0;
+            uint16_t len = 1;
+            iss >> std::hex >> addr >> std::dec >> len;
+
+            if (len == 0 || len > 64) len = 64;
+
+            auto result = device.i2cRead(addr, len);
+            printScsiResult("I2C READ (addr=0x" + toHex(addr) + ", len=" + std::to_string(len) + ")", result);
+            if (result.success && !result.data.empty()) {
+                // Skip first byte (status)
+                std::cout << "  Data (" << (result.data.size() - 1) << " bytes):";
+                if (result.data.size() > 1) {
+                    std::cout << bytesToHex(result.data.data() + 1, result.data.size() - 1) << "\n";
+                }
+            }
+        }
+        else if (cmdLower == "i2c-writeread") {
+            if (!device.isConnected()) {
+                std::cout << "  Not connected. Use 'connect' first.\n";
+                continue;
+            }
+            uint8_t addr = 0;
+            std::string hexStr;
+            uint16_t rlen = 1;
+            iss >> std::hex >> addr >> hexStr >> std::dec >> rlen;
+
+            if (hexStr.empty()) {
+                std::cout << "  Usage: i2c-writeread <addr> <hex_write_data> <read_len>\n";
+                std::cout << "  Example: i2c-writeread 0x3C 0x00 1\n";
+                continue;
+            }
+
+            auto wdata = parseHexString(hexStr);
+            if (wdata.empty()) {
+                std::cout << "  Invalid hex data\n";
+                continue;
+            }
+
+            if (rlen == 0 || rlen > 64) rlen = 64;
+
+            auto result = device.i2cWriteRead(addr, wdata.data(), static_cast<uint16_t>(wdata.size()), rlen);
+            printScsiResult("I2C WRITE+READ (addr=0x" + toHex(addr) + ", wlen=" + std::to_string(wdata.size()) + ", rlen=" + std::to_string(rlen) + ")", result);
+            if (result.success && !result.data.empty()) {
+                std::cout << "  Data (" << (result.data.size() - 1) << " bytes):";
+                if (result.data.size() > 1) {
+                    std::cout << bytesToHex(result.data.data() + 1, result.data.size() - 1) << "\n";
+                }
+            }
+        }
+        else if (cmdLower == "speed-read") {
+            if (!device.isConnected()) {
+                std::cout << "  Not connected. Use 'connect' first.\n";
+                continue;
+            }
+            uint16_t sectors = 128; // Default: 128 sectors = 64KB
+            iss >> sectors;
+            if (sectors == 0) sectors = 1;
+            if (sectors > 65535) sectors = 65535;
+
+            std::cout << "  Testing READ speed with " << sectors << " sectors (" << (sectors * 512 / 1024) << " KB)...\n";
+
+            auto start = std::chrono::high_resolution_clock::now();
+            auto result = device.scsiRead10(0, sectors);
+            auto end = std::chrono::high_resolution_clock::now();
+
+            printScsiResult("READ " + std::to_string(sectors) + " sectors", result);
+
+            if (result.success) {
+                auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+                if (duration > 0) {
+                    double throughputKBps = (result.data.size() * 1000.0) / (duration * 1024.0);
+                    double throughputMBps = throughputKBps / 1024.0;
+                    std::cout << "  " << std::fixed << std::setprecision(2) 
+                              << result.data.size() << " bytes in " << duration << " ms\n";
+                    std::cout << "  Throughput: " << throughputKBps << " KB/s (" 
+                              << throughputMBps << " MB/s)\n";
+                }
+            }
+        }
+        else if (cmdLower == "speed-write") {
+            if (!device.isConnected()) {
+                std::cout << "  Not connected. Use 'connect' first.\n";
+                continue;
+            }
+            uint16_t sectors = 128;
+            iss >> sectors;
+            if (sectors == 0) sectors = 1;
+            if (sectors > 65535) sectors = 65535;
+
+            std::cout << "  Testing WRITE speed with " << sectors << " sectors (" << (sectors * 512 / 1024) << " KB)...\n";
+
+            // Create test pattern
+            std::vector<uint8_t> writeData(sectors * device.getSectorSize());
+            for (size_t i = 0; i < writeData.size(); ++i) {
+                writeData[i] = static_cast<uint8_t>(i & 0xFF);
+            }
+
+            auto start = std::chrono::high_resolution_clock::now();
+            auto result = device.scsiWrite10(0, sectors, writeData.data());
+            auto end = std::chrono::high_resolution_clock::now();
+
+            printScsiResult("WRITE " + std::to_string(sectors) + " sectors", result);
+
+            if (result.success) {
+                auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+                if (duration > 0) {
+                    double throughputKBps = (writeData.size() * 1000.0) / (duration * 1024.0);
+                    double throughputMBps = throughputKBps / 1024.0;
+                    std::cout << "  " << std::fixed << std::setprecision(2) 
+                              << writeData.size() << " bytes in " << duration << " ms\n";
+                    std::cout << "  Throughput: " << throughputKBps << " KB/s (" 
+                              << throughputMBps << " MB/s)\n";
+                }
+            }
         }
         else {
             std::cout << "  Unknown command: " << cmd << "\n";

@@ -53,6 +53,11 @@ public:
     // Vendor-specific command: Read device string
     ScsiResult vendorReadString(uint16_t bufferSize = 512);
 
+    // I2C operations (via vendor command 0xC0)
+    ScsiResult i2cWrite(uint8_t slaveAddr, const uint8_t* data, uint16_t len);
+    ScsiResult i2cRead(uint8_t slaveAddr, uint16_t len);
+    ScsiResult i2cWriteRead(uint8_t slaveAddr, const uint8_t* wdata, uint16_t wlen, uint16_t rlen);
+
     // Bulk storage info
     uint32_t getTotalSectors() const { return m_totalSectors; }
     uint32_t getSectorSize() const { return m_sectorSize; }

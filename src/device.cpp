@@ -311,6 +311,160 @@ ScsiResult M487Device::vendorReadString(uint16_t bufferSize)
     return result;
 }
 
+ScsiResult M487Device::i2cWrite(uint8_t slaveAddr, const uint8_t* data, uint16_t len)
+{
+    ScsiResult result = {};
+    result.success = false;
+
+    // Build CDB for I2C Write (sub-cmd 0x01)
+    CBW cbw = {};
+    cbw.dCBWSignature = CBW_SIGNATURE;
+    cbw.dCBWTag = m_cbwTag++;
+    cbw.dCBWDataTransferLength = len;
+    cbw.bmCBWFlags = 0x00;  // Direction: OUT (data to device)
+    cbw.bCBWLUN = 0;
+    cbw.bCBWCBLength = 10;
+    cbw.CDB[0] = SCSI_OP_VENDOR_READ;  // 0xC0
+    cbw.CDB[1] = 0x01;                 // Sub-cmd: I2C Write
+    cbw.CDB[2] = slaveAddr;
+    cbw.CDB[3] = (len >> 8) & 0xFF;   // Length MSB
+    cbw.CDB[4] = len & 0xFF;          // Length LSB
+    cbw.CDB[5] = 0;
+    cbw.CDB[6] = 0;
+    cbw.CDB[7] = 0;
+    cbw.CDB[8] = 0;
+    cbw.CDB[9] = 0;
+
+    // Send CBW
+    if (!sendCbw(cbw)) return result;
+
+    // Send data
+    DWORD written = 0;
+    if (!m_usb.bulkWrite(data, len, &written)) {
+        result.errorMessage = "Failed to send I2C write data";
+        return result;
+    }
+
+    // Receive CSW
+    CSW csw = {};
+    if (!receiveCsw(csw)) {
+        result.errorMessage = "Failed to receive CSW";
+        return result;
+    }
+
+    result.success = (csw.bCSWStatus == 0);
+    result.cswStatus = csw.bCSWStatus;
+
+    return result;
+}
+
+ScsiResult M487Device::i2cRead(uint8_t slaveAddr, uint16_t len)
+{
+    ScsiResult result = {};
+    result.success = false;
+
+    // Build CDB for I2C Read (sub-cmd 0x02)
+    CBW cbw = {};
+    cbw.dCBWSignature = CBW_SIGNATURE;
+    cbw.dCBWTag = m_cbwTag++;
+    cbw.dCBWDataTransferLength = len + 1;  // +1 for status byte
+    cbw.bmCBWFlags = 0x80;  // Direction: IN
+    cbw.bCBWLUN = 0;
+    cbw.bCBWCBLength = 10;
+    cbw.CDB[0] = SCSI_OP_VENDOR_READ;  // 0xC0
+    cbw.CDB[1] = 0x02;                 // Sub-cmd: I2C Read
+    cbw.CDB[2] = slaveAddr;
+    cbw.CDB[3] = (len >> 8) & 0xFF;   // Read length MSB
+    cbw.CDB[4] = len & 0xFF;          // Read length LSB
+    cbw.CDB[5] = 0;
+    cbw.CDB[6] = 0;
+    cbw.CDB[7] = 0;
+    cbw.CDB[8] = 0;
+    cbw.CDB[9] = 0;
+
+    // Send CBW
+    if (!sendCbw(cbw)) return result;
+
+    // Receive response (status byte + data)
+    std::vector<uint8_t> response(len + 1);
+    DWORD bytesRead = 0;
+    if (!receiveData(response.data(), static_cast<DWORD>(response.size()), &bytesRead)) {
+        result.errorMessage = "Failed to receive I2C read data";
+        return result;
+    }
+
+    // Receive CSW
+    CSW csw = {};
+    if (!receiveCsw(csw)) {
+        result.errorMessage = "Failed to receive CSW";
+        return result;
+    }
+
+    result.success = (csw.bCSWStatus == 0);
+    result.data = response;
+    result.data.resize(bytesRead);
+    result.cswStatus = csw.bCSWStatus;
+
+    return result;
+}
+
+ScsiResult M487Device::i2cWriteRead(uint8_t slaveAddr, const uint8_t* wdata, uint16_t wlen, uint16_t rlen)
+{
+    ScsiResult result = {};
+    result.success = false;
+
+    // Build CDB for I2C Write+Read (sub-cmd 0x03)
+    CBW cbw = {};
+    cbw.dCBWSignature = CBW_SIGNATURE;
+    cbw.dCBWTag = m_cbwTag++;
+    cbw.dCBWDataTransferLength = wlen + rlen + 1;  // write data + read data + status byte
+    cbw.bmCBWFlags = 0x00;  // Direction: OUT (write phase)
+    cbw.bCBWLUN = 0;
+    cbw.bCBWCBLength = 10;
+    cbw.CDB[0] = SCSI_OP_VENDOR_READ;  // 0xC0
+    cbw.CDB[1] = 0x03;                 // Sub-cmd: I2C Write+Read
+    cbw.CDB[2] = slaveAddr;
+    cbw.CDB[3] = (wlen >> 8) & 0xFF;  // Write length MSB
+    cbw.CDB[4] = wlen & 0xFF;          // Write length LSB
+    cbw.CDB[5] = (rlen >> 8) & 0xFF;  // Read length MSB
+    cbw.CDB[6] = rlen & 0xFF;          // Read length LSB
+    cbw.CDB[7] = 0;
+    cbw.CDB[8] = 0;
+    cbw.CDB[9] = 0;
+
+    // Send CBW
+    if (!sendCbw(cbw)) return result;
+
+    // Send write data
+    DWORD written = 0;
+    if (!m_usb.bulkWrite(wdata, wlen, &written)) {
+        result.errorMessage = "Failed to send I2C write data";
+        return result;
+    }
+
+    // Receive response (status byte + read data)
+    std::vector<uint8_t> response(rlen + 1);
+    DWORD bytesRead = 0;
+    if (!receiveData(response.data(), static_cast<DWORD>(response.size()), &bytesRead)) {
+        result.errorMessage = "Failed to receive I2C read data";
+        return result;
+    }
+
+    // Receive CSW
+    CSW csw = {};
+    if (!receiveCsw(csw)) {
+        result.errorMessage = "Failed to receive CSW";
+        return result;
+    }
+
+    result.success = (csw.bCSWStatus == 0);
+    result.data = response;
+    result.data.resize(bytesRead);
+    result.cswStatus = csw.bCSWStatus;
+
+    return result;
+}
+
 bool M487Device::getDeviceInfo(DeviceInfo& info)
 {
     if (!m_connected) {
