@@ -62,26 +62,51 @@
 #define USBD_ERR_PARAM         -4
 
 /*---------------------------------------------------------------------------------------------------------*/
-/* USB Descriptor Lengths                                                                                  */
+/* USB Descriptor Lengths (from BSP usbd.h)                                                              */
 /*---------------------------------------------------------------------------------------------------------*/
+#ifndef LEN_DEVICE
 #define LEN_DEVICE              18
+#endif
+#ifndef LEN_CONFIG
 #define LEN_CONFIG              9
+#endif
+#ifndef LEN_INTERFACE
 #define LEN_INTERFACE           9
+#endif
+#ifndef LEN_ENDPOINT
 #define LEN_ENDPOINT           7
+#endif
+#ifndef LEN_HID
 #define LEN_HID                9
-#define LEN_STRING              4
+#endif
 
 /*---------------------------------------------------------------------------------------------------------*/
-/* USB Descriptor Types                                                                                     */
+/* USB Descriptor Types (from BSP usbd.h)                                                                   */
 /*---------------------------------------------------------------------------------------------------------*/
+#ifndef DESC_DEVICE
 #define DESC_DEVICE             0x01
+#endif
+#ifndef DESC_CONFIG
 #define DESC_CONFIG            0x02
+#endif
+#ifndef DESC_INTERFACE
 #define DESC_INTERFACE         0x04
+#endif
+#ifndef DESC_ENDPOINT
 #define DESC_ENDPOINT          0x05
+#endif
+#ifndef DESC_HID
 #define DESC_HID               0x21
+#endif
+#ifndef DESC_REPORT
 #define DESC_REPORT            0x22
+#endif
+#ifndef DESC_STRING
 #define DESC_STRING            0x03
+#endif
+#ifndef DESC_QUALIFIER
 #define DESC_QUALIFIER         0x06
+#endif
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* USB Device States                                                                                       */

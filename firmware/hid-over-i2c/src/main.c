@@ -13,6 +13,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include "NuMicro.h"
 
 /*---------------------------------------------------------------------------------------------------------*/
@@ -34,7 +35,7 @@
 
 /** Enable GPIO interrupt for Input Reports */
 #ifndef ENABLE_I2C_INTERRUPT
-#define ENABLE_I2C_INTERRUPT     1
+#define ENABLE_I2C_INTERRUPT     0  /* Disabled for now - use polling */
 #endif
 
 /** GPIO pin for I2C device interrupt */
@@ -66,8 +67,8 @@ static void System_Init(void)
     /* Set HCLK to HXT */
     CLK_SetHCLK(CLK_CLKSEL0_HCLKSEL_HXT, CLK_CLKDIV0_HCLK(1));
     
-    /* Set core clock to 96 MHz */
-    CLK_SetCoreClock(FREQ_96MHZ);
+    /* Set core clock to 72 MHz (HXT * 6) */
+    CLK_SetCoreClock(72000000UL);
     
     /* PCLK0, PCLK1 = HCLK/2 */
     CLK->PCLKDIV = CLK_PCLKDIV_APB0DIV_DIV2 | CLK_PCLKDIV_APB1DIV_DIV2;
@@ -104,16 +105,10 @@ static void GPIO_Init(void)
 {
 #if ENABLE_I2C_INTERRUPT
     /* Configure GPIO for I2C device interrupt input */
-    /* PC.4 as input with pull-up */
+    /* PC.4 as input with pull-up - simplified for now */
     PC->MODE &= ~(0x3 << (4 * 2));   /* Input mode */
     PC->PUSEL |= (0x1 << (4 * 2));   /* Pull-up */
-    
-    /* Enable GPIO C interrupt */
-    PC->INTCFG |= (1 << 4);   /* Rising edge trigger */
-    PC->INTEN |= (1 << 4);    /* Enable interrupt */
-    
-    /* NVIC for GPIOC */
-    NVIC_EnableIRQ(GPIOC_IRQn);
+    /* Note: Full GPIO group interrupt setup would need M487-specific registers */
 #endif
 }
 
@@ -202,19 +197,5 @@ int main(void)
 /* Interrupt Handlers                                                                                      */
 /*---------------------------------------------------------------------------------------------------------*/
 
-#if ENABLE_I2C_INTERRUPT
-/**
- * @brief   GPIO C Interrupt Handler (I2C device interrupt)
- */
-void GPIOC_IRQHandler(void)
-{
-    /* Check if PC.4 caused interrupt */
-    if (PC->INTSTS & (1 << 4)) {
-        /* Clear interrupt flag */
-        PC->INTSTS = (1 << 4);
-        
-        /* Handle I2C device Input Report */
-        Bridge_OnI2CInterrupt();
-    }
-}
-#endif
+/* Note: GPIO interrupt is simplified. For full implementation,
+ * M487 GPIO group interrupts need proper setup. */
