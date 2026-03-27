@@ -105,7 +105,7 @@ uint32_t I2C0_GetSpeed(void)
     return s_u32CurrentSpeed;
 }
 
-int32_t I2C0_WriteReg(uint8_t addr, uint8_t reg, const uint8_t *data, uint16_t len)
+int32_t I2C0_WriteReg(uint8_t addr, uint16_t reg, const uint8_t *data, uint16_t len)
 {
     int32_t ret;
     uint16_t i;
@@ -129,8 +129,16 @@ int32_t I2C0_WriteReg(uint8_t addr, uint8_t reg, const uint8_t *data, uint16_t l
     if (ret != I2C_OK) goto done;
     ClearFlags();
     
-    /* Send register index */
-    UI2C0->TXDAT = reg;
+    /* Send register index (16-bit, MSB first per HID-over-I2C spec)
+     * For registers <= 0xFF, only send LSB (many devices ignore MSB) */
+    UI2C0->TXDAT = (uint8_t)(reg >> 8);  /* MSB */
+    UI2C0->PROTCTL = (UI2C0->PROTCTL & ~0x2E) | UI2C_PROTCTL_PTRG_Msk;
+    ret = WaitForComplete(I2C0_TIMEOUT);
+    if (ret == I2C_ERR_NACK) goto done;
+    if (ret != I2C_OK) goto done;
+    ClearFlags();
+    
+    UI2C0->TXDAT = (uint8_t)(reg & 0xFF);  /* LSB */
     UI2C0->PROTCTL = (UI2C0->PROTCTL & ~0x2E) | UI2C_PROTCTL_PTRG_Msk;
     ret = WaitForComplete(I2C0_TIMEOUT);
     if (ret == I2C_ERR_NACK) goto done;
@@ -154,7 +162,7 @@ done:
     return ret;
 }
 
-int32_t I2C0_ReadReg(uint8_t addr, uint8_t reg, uint8_t *data, uint16_t len)
+int32_t I2C0_ReadReg(uint8_t addr, uint16_t reg, uint8_t *data, uint16_t len)
 {
     int32_t ret;
     uint16_t i;
@@ -164,7 +172,7 @@ int32_t I2C0_ReadReg(uint8_t addr, uint8_t reg, uint8_t *data, uint16_t len)
     
     s_u8DeviceAddr = addr;
     
-    /* Write phase: START -> addr+W -> reg */
+    /* Write phase: START -> addr+W -> reg_msb -> reg_lsb */
     UI2C0->PROTCTL = (UI2C0->PROTCTL & ~0x2E) | UI2C_PROTCTL_STA_Msk;
     ret = WaitForComplete(I2C0_TIMEOUT);
     if (ret != I2C_OK) goto done;
@@ -177,7 +185,15 @@ int32_t I2C0_ReadReg(uint8_t addr, uint8_t reg, uint8_t *data, uint16_t len)
     if (ret != I2C_OK) goto done;
     ClearFlags();
     
-    UI2C0->TXDAT = reg;
+    /* Send 16-bit register address (MSB first) */
+    UI2C0->TXDAT = (uint8_t)(reg >> 8);  /* MSB */
+    UI2C0->PROTCTL = (UI2C0->PROTCTL & ~0x2E) | UI2C_PROTCTL_PTRG_Msk;
+    ret = WaitForComplete(I2C0_TIMEOUT);
+    if (ret == I2C_ERR_NACK) goto done;
+    if (ret != I2C_OK) goto done;
+    ClearFlags();
+    
+    UI2C0->TXDAT = (uint8_t)(reg & 0xFF);  /* LSB */
     UI2C0->PROTCTL = (UI2C0->PROTCTL & ~0x2E) | UI2C_PROTCTL_PTRG_Msk;
     ret = WaitForComplete(I2C0_TIMEOUT);
     if (ret == I2C_ERR_NACK) goto done;
@@ -298,7 +314,7 @@ done:
     return ret;
 }
 
-int32_t I2C0_WriteRead(uint8_t addr, uint8_t reg, const uint8_t *wdata, uint16_t wlen,
+int32_t I2C0_WriteRead(uint8_t addr, uint16_t reg, const uint8_t *wdata, uint16_t wlen,
                          uint8_t *rdata, uint16_t rlen)
 {
     int32_t ret;
@@ -319,8 +335,15 @@ int32_t I2C0_WriteRead(uint8_t addr, uint8_t reg, const uint8_t *wdata, uint16_t
     if (ret != I2C_OK) goto done;
     ClearFlags();
     
-    /* Register index */
-    UI2C0->TXDAT = reg;
+    /* Send 16-bit register address (MSB first) */
+    UI2C0->TXDAT = (uint8_t)(reg >> 8);  /* MSB */
+    UI2C0->PROTCTL = (UI2C0->PROTCTL & ~0x2E) | UI2C_PROTCTL_PTRG_Msk;
+    ret = WaitForComplete(I2C0_TIMEOUT);
+    if (ret == I2C_ERR_NACK) goto done;
+    if (ret != I2C_OK) goto done;
+    ClearFlags();
+    
+    UI2C0->TXDAT = (uint8_t)(reg & 0xFF);  /* LSB */
     UI2C0->PROTCTL = (UI2C0->PROTCTL & ~0x2E) | UI2C_PROTCTL_PTRG_Msk;
     ret = WaitForComplete(I2C0_TIMEOUT);
     if (ret == I2C_ERR_NACK) goto done;

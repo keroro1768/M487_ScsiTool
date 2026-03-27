@@ -111,12 +111,16 @@ typedef struct {
     uint16_t productID;
     uint16_t versionID;
     
-    /* Register addresses (extracted from HID Descriptor) */
-    uint8_t  regReportDesc;
-    uint8_t  regInput;
-    uint8_t  regOutput;
-    uint8_t  regCommand;
-    uint8_t  regData;
+    /* Register addresses (extracted from HID Descriptor)
+     * HID-over-I2C spec defines these as 16-bit values (wReportDescRegister,
+     * wInputRegister, etc.). Use uint16_t to avoid truncation.
+     * Note: Most HID-over-I2C devices only use 8-bit registers (0x00-0xFF),
+     * but devices requiring >0xFF would fail with uint8_t. */
+    uint16_t regReportDesc;
+    uint16_t regInput;
+    uint16_t regOutput;
+    uint16_t regCommand;
+    uint16_t regData;
 } HID_Context_t;
 
 /*---------------------------------------------------------------------------------------------------------*/

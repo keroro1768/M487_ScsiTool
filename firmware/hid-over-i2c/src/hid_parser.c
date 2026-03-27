@@ -146,12 +146,12 @@ int32_t HID_Parser_ParseDescriptor(HID_Context_t *ctx, const uint8_t *buf)
     
     memcpy(ctx->hidDesc.reserved, &p[26], 4);
     
-    /* Extract key fields to context */
-    ctx->regReportDesc = (uint8_t)ctx->hidDesc.wReportDescRegister;
-    ctx->regInput = (uint8_t)ctx->hidDesc.wInputRegister;
-    ctx->regOutput = (uint8_t)ctx->hidDesc.wOutputRegister;
-    ctx->regCommand = (uint8_t)ctx->hidDesc.wCommandRegister;
-    ctx->regData = (uint8_t)ctx->hidDesc.wDataRegister;
+    /* Extract key fields to context (store full 16-bit register addresses) */
+    ctx->regReportDesc = ctx->hidDesc.wReportDescRegister;
+    ctx->regInput = ctx->hidDesc.wInputRegister;
+    ctx->regOutput = ctx->hidDesc.wOutputRegister;
+    ctx->regCommand = ctx->hidDesc.wCommandRegister;
+    ctx->regData = ctx->hidDesc.wDataRegister;
     
     ctx->vendorID = ctx->hidDesc.wVendorID;
     ctx->productID = ctx->hidDesc.wProductID;
@@ -214,7 +214,7 @@ int32_t HID_Parser_ReadReportDescriptor(HID_Context_t *ctx)
     
     /* Read Report Descriptor from the register specified in HID Descriptor */
     ret = I2C0_ReadReg(ctx->deviceAddr, 
-                         (uint8_t)ctx->hidDesc.wReportDescRegister,
+                         ctx->hidDesc.wReportDescRegister,
                          ctx->reportDesc, 
                          descLen);
     
@@ -253,14 +253,14 @@ void HID_Parser_DumpDescriptor(const HID_Context_t *ctx)
     printf("=== HID Descriptor ===\n");
     printf("  Length:     %d bytes\n", d->wHIDDescLength);
     printf("  Version:     0x%04X\n", d->bcdVersion);
-    printf("  ReportDesc:  %d bytes @ reg 0x%02X\n", 
+    printf("  ReportDesc:  %d bytes @ reg 0x%04X\n", 
            d->wReportDescLength, d->wReportDescRegister);
-    printf("  Input:       max %d bytes @ reg 0x%02X\n", 
+    printf("  Input:       max %d bytes @ reg 0x%04X\n", 
            d->wMaxInputLength, d->wInputRegister);
-    printf("  Output:      max %d bytes @ reg 0x%02X\n", 
+    printf("  Output:      max %d bytes @ reg 0x%04X\n", 
            d->wMaxOutputLength, d->wOutputRegister);
-    printf("  Command:     @ reg 0x%02X\n", d->wCommandRegister);
-    printf("  Data:        @ reg 0x%02X\n", d->wDataRegister);
+    printf("  Command:     @ reg 0x%04X\n", d->wCommandRegister);
+    printf("  Data:        @ reg 0x%04X\n", d->wDataRegister);
     printf("  VID:         0x%04X\n", d->wVendorID);
     printf("  PID:         0x%04X\n", d->wProductID);
     printf("  Version:     0x%04X\n", d->wVersionID);

@@ -84,26 +84,28 @@ uint32_t I2C0_GetSpeed(void);
 /**
  * @brief   Write data to I2C device register (blocking)
  * @param   addr     7-bit I2C device address
- * @param   reg      Register index to write
+ * @param   reg      Register index to write (16-bit, per HID-over-I2C spec)
  * @param   data     Pointer to data buffer
  * @param   len      Number of bytes to write
  * @return  I2C_OK on success, error code on failure
  * 
- * Sequence: START -> ADDR+W -> REG -> DATA... -> STOP
+ * Sequence: START -> ADDR+W -> REG_MSB -> REG_LSB -> DATA... -> STOP
+ * For 8-bit registers (reg <= 0xFF), only one byte is sent.
  */
-int32_t I2C0_WriteReg(uint8_t addr, uint8_t reg, const uint8_t *data, uint16_t len);
+int32_t I2C0_WriteReg(uint8_t addr, uint16_t reg, const uint8_t *data, uint16_t len);
 
 /**
  * @brief   Read data from I2C device register (blocking)
  * @param   addr     7-bit I2C device address
- * @param   reg      Register index to read
+ * @param   reg      Register index to read (16-bit, per HID-over-I2C spec)
  * @param   data     Pointer to receive buffer
  * @param   len      Number of bytes to read
  * @return  I2C_OK on success, error code on failure
  * 
- * Sequence: START -> ADDR+W -> REG -> START -> ADDR+R -> DATA... -> STOP
+ * Sequence: START -> ADDR+W -> REG_MSB -> REG_LSB -> START -> ADDR+R -> DATA... -> STOP
+ * For 8-bit registers (reg <= 0xFF), only one byte is sent.
  */
-int32_t I2C0_ReadReg(uint8_t addr, uint8_t reg, uint8_t *data, uint16_t len);
+int32_t I2C0_ReadReg(uint8_t addr, uint16_t reg, uint8_t *data, uint16_t len);
 
 /**
  * @brief   Write data to I2C device without register address (blocking)
@@ -130,16 +132,17 @@ int32_t I2C0_Read(uint8_t addr, uint8_t *data, uint16_t len);
 /**
  * @brief   Combined Write+Read (Write register address, then read data)
  * @param   addr     7-bit I2C device address
- * @param   reg      Register index
+ * @param   reg      Register index (16-bit, per HID-over-I2C spec)
  * @param   wdata    Pointer to write buffer (can be NULL if wlen=0)
  * @param   wlen     Number of bytes to write
  * @param   rdata    Pointer to receive buffer
  * @param   rlen     Number of bytes to read
  * @return  I2C_OK on success, error code on failure
  * 
- * Sequence: START -> ADDR+W -> reg -> wdata... -> START -> ADDR+R -> rdata... -> STOP
+ * Sequence: START -> ADDR+W -> REG_MSB -> REG_LSB -> wdata... -> START -> ADDR+R -> rdata... -> STOP
+ * For 8-bit registers (reg <= 0xFF), only one byte is sent.
  */
-int32_t I2C0_WriteRead(uint8_t addr, uint8_t reg, const uint8_t *wdata, uint16_t wlen,
+int32_t I2C0_WriteRead(uint8_t addr, uint16_t reg, const uint8_t *wdata, uint16_t wlen,
                         uint8_t *rdata, uint16_t rlen);
 
 /**
