@@ -1,5 +1,7 @@
 # Build output
 build/
+firmware/*/build/
+firmware/*/*.o
 *.exe
 *.dll
 *.obj
@@ -9,6 +11,10 @@ build/
 *.lib
 *.o
 *.a
+*.bin
+*.hex
+*.elf
+*.map
 
 # Visual Studio
 .vs/
@@ -30,3 +36,6 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.log
+
+# External libraries (reference only, not owned)
+D:/AiWorkSpace/KM/M480BSP/

@@ -25,6 +25,13 @@ static volatile enum UI2C_MASTER_EVENT s_eI2cEvent = MASTER_STOP;
 static volatile uint8_t s_u8MstDataLen = 0;
 static volatile uint8_t s_u8MstEndFlag = 0;
 
+/* NACK retry tracking - Q-05 */
+static volatile uint8_t s_u8NackRetryCount = 0;
+#define NACK_RETRY_MAX       3
+#define I2C_TIMEOUT_COUNT    1000000UL  /* Q-07: Timeout for I2C transaction */
+#define I2C_SCAN_TIMEOUT     1000       /* Q-07: Short timeout for bus scan probe */
+#define I2C_SCAN_DELAY       100        /* Q-07: Inter-byte delay between scan probes */
+
 /* TX/RX buffers */
 static uint8_t s_au8MstTxData[68];
 static uint8_t s_au8MstRxData[64];
@@ -97,22 +104,60 @@ void USCI0_IRQHandler(void)
             s_eI2cEvent = MASTER_READ_DATA;
             UI2C_SET_CONTROL_REG(UI2C0, UI2C_CTL_PTRG);
         }
+        
+        else if (s_eI2cEvent == MASTER_READ_DATA) {
+            /* Read data byte and ACK to continue reading (unless last byte) */
+            uint8_t byte = (uint8_t)(UI2C_GET_DATA(UI2C0) & 0xFF);
+            s_au8MstRxData[s_u16RxCount++] = byte;
+            
+            if (s_u16RxCount < s_u16RxLen) {
+                /* More bytes to read - send ACK and continue */
+                /* AA=1 means ACK for next byte */
+                UI2C_SET_CONTROL_REG(UI2C0, UI2C_CTL_PTRG | UI2C_CTL_AA);
+            } else {
+                /* Last byte (or only byte) - send NACK to tell slave we're done */
+                UI2C_SET_CONTROL_REG(UI2C0, UI2C_CTL_PTRG);  /* No AA = NACK */
+            }
+        }
     }
 
     else if ((u32Status & UI2C_PROTSTS_NACKIF_Msk) == UI2C_PROTSTS_NACKIF_Msk) {
         UI2C_CLR_PROT_INT_FLAG(UI2C0, UI2C_PROTSTS_NACKIF_Msk);
 
         if (s_eI2cEvent == MASTER_SEND_ADDRESS) {
-            /* Device not responding - NAK on address */
-            s_eI2cEvent = MASTER_STOP;
-            UI2C_SET_CONTROL_REG(UI2C0, (UI2C_CTL_PTRG | UI2C_CTL_STO));
+            /* Q-05: Device NACKed address - retry with backoff */
+            s_u8NackRetryCount++;
+            if (s_u8NackRetryCount < NACK_RETRY_MAX) {
+                /* Exponential backoff: delay proportional to retry count */
+                volatile uint32_t delay = 50 * s_u8NackRetryCount;
+                while (delay-- > 0);
+                /* Retry: resend START + address */
+                s_eI2cEvent = MASTER_SEND_START;
+                UI2C_SET_CONTROL_REG(UI2C0, UI2C_CTL_STA);
+            } else {
+                /* Max retries exceeded - give up */
+                s_eI2cEvent = MASTER_STOP;
+                UI2C_SET_CONTROL_REG(UI2C0, (UI2C_CTL_PTRG | UI2C_CTL_STO));
+            }
         } else if (s_eI2cEvent == MASTER_SEND_DATA) {
-            /* NAK during data transmission */
-            s_eI2cEvent = MASTER_STOP;
-            UI2C_SET_CONTROL_REG(UI2C0, (UI2C_CTL_PTRG | UI2C_CTL_STO));
+            /* Q-05: Device NACKed data - retry sending same byte */
+            s_u8NackRetryCount++;
+            if (s_u8NackRetryCount < NACK_RETRY_MAX) {
+                /* Resend same data byte */
+                volatile uint32_t delay = 50 * s_u8NackRetryCount;
+                while (delay-- > 0);
+                s_eI2cEvent = MASTER_SEND_DATA;
+                UI2C_SET_DATA(UI2C0, s_au8MstTxData[s_u8MstDataLen]);
+                UI2C_SET_CONTROL_REG(UI2C0, UI2C_CTL_PTRG);
+            } else {
+                /* Max retries exceeded - give up */
+                s_eI2cEvent = MASTER_STOP;
+                UI2C_SET_CONTROL_REG(UI2C0, (UI2C_CTL_PTRG | UI2C_CTL_STO));
+            }
         } else if (s_eI2cEvent == MASTER_READ_DATA) {
-            /* Last byte read - send NAK then STOP */
-            s_au8MstRxData[s_u16RxCount++] = (uint8_t)(UI2C_GET_DATA(UI2C0) & 0xFF);
+            /* NACK on read - this shouldn't normally happen since we NACK ourselves
+             * but handle it gracefully by ending the transfer */
+            /* Data was already read on ACKIF */
             s_eI2cEvent = MASTER_STOP;
             UI2C_SET_CONTROL_REG(UI2C0, (UI2C_CTL_PTRG | UI2C_CTL_STO));
         }
@@ -162,6 +207,7 @@ static int32_t I2C_StartTransaction(uint8_t devAddr, const uint8_t *txBuf, uint1
     s_u8DeviceAddr = devAddr;
     s_u8MstDataLen = 0;
     s_u8MstEndFlag = 0;
+    s_u8NackRetryCount = 0;  /* Q-05: Reset NACK retry count */
     s_u16TxLen = txLen;
     s_u16RxLen = rxLen;
     s_u16RxCount = 0;
@@ -177,7 +223,7 @@ static int32_t I2C_StartTransaction(uint8_t devAddr, const uint8_t *txBuf, uint1
     UI2C_SET_CONTROL_REG(UI2C0, UI2C_CTL_STA);
 
     /* Wait for transaction complete */
-    volatile uint32_t timeout = 1000000UL;
+    volatile uint32_t timeout = I2C_TIMEOUT_COUNT;
     while (!s_u8MstEndFlag && --timeout > 0);
     if (timeout == 0) {
         /* Timeout - reset I2C bus */
@@ -210,31 +256,60 @@ int32_t I2C_Write(uint8_t slaveAddr, const uint8_t *data, uint16_t len)
 }
 
 /*---------------------------------------------------------------------------------------------------------*/
-/* I2C Read                                                                                               */
+/* I2C Read (Pure read - no write before)                                                                  */
 /*---------------------------------------------------------------------------------------------------------*/
+/**
+ * @brief   Read data from I2C device (pure read, no write address phase)
+ * @param   slaveAddr   7-bit I2C device address
+ * @param   data       Buffer to receive data
+ * @param   len        Number of bytes to read (max I2C_MAX_READ_LEN)
+ * @return  0 on success, negative on error
+ * 
+ * Protocol: START -> ADDR+R -> [DATA...] -> STOP
+ * 
+ * Note: For devices that require a register address before reading,
+ *       use I2C_WriteRead() instead.
+ */
 int32_t I2C_Read(uint8_t slaveAddr, uint8_t *data, uint16_t len)
 {
     if (len == 0) return 0;
     if (len > I2C_MAX_READ_LEN) len = I2C_MAX_READ_LEN;
-
-    /* For pure read, we need to send START + addr+R, then read.
-     * We use the same state machine: send address write (0 bytes) -> RESTART -> read.
-     * But actually UI2C doesn't support 0-byte write before restart directly.
-     * 
-     * For pure read, we use a separate state:
-     *   1. Send START + addr+W (but this is wrong for read)
-     * 
-     * Actually the state machine handles it:
-     *   - txLen=0, rxLen=len: send START, addr+R, then read
-     *   But the current state machine always sends addr+W first.
-     * 
-     * Fix: for read-only, we use MASTER_SEND_START -> addr+R directly.
-     * We need a separate path. */
-    (void)slaveAddr;
-    (void)data;
-    (void)len;
-    /* TODO: implement pure read */
-    return -1;
+    if (data == NULL) return -1;
+    
+    /* Wait for previous transaction to complete */
+    while (!s_u8MstEndFlag && (UI2C0->PROTCTL & UI2C_PROTCTL_PROTEN_Msk)) { }
+    
+    /* Initialize transaction */
+    s_u8DeviceAddr = slaveAddr;
+    s_u8MstEndFlag = 0;
+    s_u8NackRetryCount = 0;
+    s_u16RxLen = len;
+    s_u16RxCount = 0;
+    
+    /* For pure read: Set event to MASTER_SEND_REPEAT_START so that when 
+     * START condition is detected, it sends address+R directly instead of address+W */
+    s_eI2cEvent = MASTER_SEND_REPEAT_START;
+    
+    /* Send START - when STARIF fires, ISR will send ADDR+R (because event is MASTER_SEND_REPEAT_START) */
+    UI2C_SET_CONTROL_REG(UI2C0, UI2C_CTL_STA);
+    
+    /* Wait for transaction complete */
+    volatile uint32_t timeout = I2C_TIMEOUT_COUNT;
+    while (!s_u8MstEndFlag && --timeout > 0);
+    if (timeout == 0) {
+        /* Timeout - reset I2C bus */
+        UI2C_SET_CONTROL_REG(UI2C0, (UI2C_CTL_PTRG | UI2C_CTL_STO));
+        UI2C_ClearTimeoutFlag(UI2C0);
+        return -1;
+    }
+    
+    /* Copy received data to output buffer */
+    if (s_u16RxCount > 0 && data != NULL) {
+        uint16_t copyLen = (s_u16RxCount < len) ? s_u16RxCount : len;
+        memcpy(data, s_au8MstRxData, copyLen);
+    }
+    
+    return 0;
 }
 
 /*---------------------------------------------------------------------------------------------------------*/
@@ -272,7 +347,7 @@ int32_t I2C_Scan(uint8_t *foundAddrs, uint8_t maxCount)
         UI2C_SET_CONTROL_REG(UI2C0, UI2C_CTL_STA);
 
         /* Wait short time for NACK/ACK */
-        volatile uint32_t t = 1000;
+        volatile uint32_t t = I2C_SCAN_TIMEOUT;
         while (!s_u8MstEndFlag && --t > 0);
 
         if (t > 0 && s_eI2cEvent != MASTER_STOP) {
@@ -296,7 +371,7 @@ int32_t I2C_Scan(uint8_t *foundAddrs, uint8_t maxCount)
         s_u8MstEndFlag = 0;
 
         /* Inter-byte delay */
-        volatile uint32_t d = 100; while (--d > 0);
+        volatile uint32_t d = I2C_SCAN_DELAY; while (--d > 0);
     }
 
     return count;

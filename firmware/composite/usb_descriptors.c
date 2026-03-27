@@ -13,6 +13,10 @@
 #include "NuMicro.h"
 #include "hid_i2c.h"
 
+/* Forward declarations for descriptors defined later */
+/* HID Report Descriptor size (42 bytes - calculated from actual descriptor) */
+#define HID_RPT_SIZE  42
+
 /*---------------------------------------------------------------------------------------------------------*/
 /* USB Device Descriptor                                                                                     */
 /*---------------------------------------------------------------------------------------------------------*/
@@ -23,7 +27,7 @@ const uint8_t gu8DeviceDescriptor[LEN_DEVICE] = {
     0x00,                  /* bDeviceClass: Composite (0) */
     0x00,                  /* bDeviceSubClass */
     0x00,                  /* bDeviceProtocol */
-    EP0_MAX_PKT_SIZE,      /* bMaxPacketSize0 */
+    CEP_MAX_PKT_SIZE,      /* bMaxPacketSize0 */
     (USBD_VID & 0xFF), ((USBD_VID >> 8) & 0xFF),         /* idVendor */
     (USBD_PID & 0xFF), ((USBD_PID >> 8) & 0xFF),         /* idProduct */
     0x00, 0x00,           /* bcdDevice */
@@ -43,7 +47,7 @@ const uint8_t gu8QualifierDescriptor[LEN_QUALIFIER] = {
     0x00,                  /* bDeviceClass */
     0x00,                  /* bDeviceSubClass */
     0x00,                  /* bDeviceProtocol */
-    EP0_MAX_PKT_SIZE,      /* bMaxPacketSize0 */
+    CEP_MAX_PKT_SIZE,      /* bMaxPacketSize0 */
     0x01,                  /* bNumConfigurations */
     0x00                   /* bReserved */
 };
@@ -84,8 +88,8 @@ const uint8_t gu8ConfigDescriptor[] = {
     0x01,                                      /* bNumDescriptors */
     DESC_HID_RPT,                              /* bDescriptorType */
     /* wDescriptorLength */
-    sizeof(gu8HIDReportDescriptor) & 0xFF,
-    (sizeof(gu8HIDReportDescriptor) >> 8) & 0xFF,
+    HID_RPT_SIZE & 0xFF,
+    (HID_RPT_SIZE >> 8) & 0xFF,
 
     /* EP1: Interrupt IN */
     LEN_ENDPOINT,                              /* bLength */
@@ -149,7 +153,7 @@ const uint8_t gu8HIDReportDescriptor[] = {
     0x15, 0x00,            /*   Logical Min: 0 */
     0x26, 0xFF, 0x00,      /*   Logical Max: 255 */
     0x75, 0x08,            /*   Report Size: 8 */
-    0x96, 0x00, 0x02,      /*   Report Count: 512 (max packet) */
+    0x96, 0x40, 0x00,      /*   Report Count: 64 bytes (EPA_MAX_PKT_SIZE) */
     0x81, 0x02,            /*   Input: Data, Variable, Absolute */
     0xC0,                  /* End Collection */
 
@@ -162,7 +166,7 @@ const uint8_t gu8HIDReportDescriptor[] = {
     0x15, 0x00,
     0x26, 0xFF, 0x00,
     0x75, 0x08,
-    0x96, 0x00, 0x02,      /* Report Count: 512 */
+    0x96, 0x40, 0x00,      /* Report Count: 64 bytes */
     0x81, 0x02,            /* Input */
     0xC0,
 
@@ -175,7 +179,7 @@ const uint8_t gu8HIDReportDescriptor[] = {
     0x15, 0x00,
     0x26, 0xFF, 0x00,
     0x75, 0x08,
-    0x96, 0x00, 0x02,
+    0x96, 0x40, 0x00,
     0x81, 0x02,
     0xC0,
 
@@ -232,4 +236,28 @@ const uint8_t gu8ProductStringDescriptor[] = {
     'i', 0x00,
     't', 0x00,
     'e', 0x00
+};
+
+/* High Speed and Full Speed Config Descriptors (same as standard config for composite device) */
+/* For HS: use EPA=EP1(512), EPB=EP2(512), EPC=EP3(512), EPD=EP4(512) */
+/* For FS: use EPA=EP1(64), EPB=EP2(64), EPC=EP3(64), EPD=EP4(64) */
+extern const uint8_t gu8ConfigDescriptor[];  /* Forward reference - defined above */
+
+/* String descriptor pointer array (for S_HSUSBD_INFO_T.gu8StringDesc) */
+const uint8_t *gu8StringDescriptor[] = {
+    (const uint8_t *)gu8LangIDDescriptor,          /* String 0: Language ID */
+    (const uint8_t *)gu8VendorStringDescriptor,   /* String 1: Manufacturer */
+    (const uint8_t *)gu8ProductStringDescriptor,  /* String 2: Product */
+    NULL                                          /* String 3: Serial Number (none) */
+};
+
+/* HID Report Descriptor sizes (for S_HSUSBD_INFO_T.gu32HidReportSize) */
+const uint32_t gu32HIDReportSize[1] = {
+    HID_RPT_SIZE   /* HID Report Descriptor size for Interface 0 */
+};
+
+/* HID Descriptor indices within Configuration Descriptor (for S_HSUSBD_INFO_T.gu32ConfigHidDescIdx) */
+const uint32_t gu32ConfigHidDescIdx[2] = {
+    25,  /* Interface 0: HID - HID descriptor starts at byte 25 of config descriptor */
+    0    /* Interface 1: MSC - no HID descriptor */
 };

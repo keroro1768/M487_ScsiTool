@@ -17,6 +17,9 @@
 #include <stdio.h>
 #include "NuMicro.h"
 #include "hid_i2c.h"
+#include "itm.h"
+#include "msc_debug.h"
+#include "uart_debug.h"
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* System Clock Configuration                                                                              */
@@ -68,6 +71,14 @@ void SYS_Init(void)
     SYS->GPE_MFPL &= ~(SYS_GPE_MFPL_PE2MFP_Msk | SYS_GPE_MFPL_PE3MFP_Msk);
     SYS->GPE_MFPL |= (SYS_GPE_MFPL_PE2MFP_USCI0_CLK | SYS_GPE_MFPL_PE3MFP_USCI0_DAT0);
 
+    /* Configure PB8 as SWO (Single Wire Output) for ITM trace */
+    /* NOTE: Value 0x07 is a common setting for SWO on Nuvoton M-series - verify with datasheet */
+    /* SWO pin = PB8, alternate function for debug trace output */
+    /* TODO: Verify PB8MFP value for M487. Common values: 0x07 or 0x08 */
+    // SYS->GPB_MFPH = (SYS->GPB_MFPH & ~SYS_GPB_MFPH_PB8MFP_Msk) | (0x07 << SYS_GPB_MFPH_PB8MFP_Pos);
+    /* Note: Uncomment the above line when PB8 SWO function is confirmed for your board.
+     * For boards where PB8 is not available, ITM still works via SWO pin on dedicated debug header. */
+
     SystemCoreClockUpdate();
 }
 
@@ -84,17 +95,30 @@ int main(void)
     /* Init System, IP clock and multi-function I/O */
     SYS_Init();
 
+    /* Initialize ITM SWO trace (call before other initializations) */
+    /* Note: PB8 must be configured as SWO in SYS_Init() first */
+    ITM_Init();
+    ITM_LOG("=== System Boot ===\n");
+
     /* Init UART to 115200-8n1 for print message */
     UART_Open(UART0, 115200);
+
+    /* Initialize UART Debug Log (structured logging via UART) */
+    UART_DBG_Init(UART0, SystemCoreClock);
 
     printf("M487 USB Composite Device\n");
     printf("  - HID I2C Bridge (Interface 0)\n");
     printf("  - USB Mass Storage  (Interface 1)\n");
     printf("VID=0x%04X PID=0x%04X\n\n", USBD_VID, USBD_PID);
 
+    MAIN_LOG("Device Info: VID=0x%04X PID=0x%04X\n", USBD_VID, USBD_PID);
+    ITM_LOG("[MAIN] Device Info: VID=0x%04X PID=0x%04X\n", USBD_VID, USBD_PID);
+
     /* Initialize I2C */
     I2C0_Init();
     printf("I2C0 initialized (PE2=CLK, PE3=DAT0, 100kHz)\n");
+    I2C_LOG("I2C0 initialized on PE2(CLK)/PE3(DAT0), 100kHz\n");
+    I2C_TRACE("I2C0 initialized on PE2(CLK)/PE3(DAT0), 100kHz\n");
 
     /* Open USB device with HID class + MSC */
     HSUSBD_Open(&gsHSInfo, HID_ClassRequest, NULL);
@@ -103,11 +127,18 @@ int main(void)
     /* HID endpoint configuration + MSC BOT init */
     HID_Init();
 
+    /* Initialize MSC Vendor Debug Channel */
+    MSC_Debug_Init();
+    MSC_LOG("MSC Vendor Debug Channel initialized\n");
+    MSC_TRACE("[MSC_DEBUG] Debug channel ready\n");
+
     /* Enable USBD interrupt */
     NVIC_EnableIRQ(USBD20_IRQn);
 
     /* Start USB device */
     printf("Waiting for USB attach...\n");
+    USB_LOG("USB stack initialized, waiting for attach\n");
+    USB_TRACE("USB stack initialized, waiting for attach\n");
     while (1) {
         if (HSUSBD_IS_ATTACHED()) {
             HSUSBD_Start();

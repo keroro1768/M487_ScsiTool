@@ -13,6 +13,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include "msc_debug.h"
 #include "NuMicro.h"
 #include "hid_i2c.h"
 
@@ -43,7 +44,27 @@ CBW_t g_sCBW;
 CSW_t g_sCSW;
 
 /* HSUSBD device info (must be provided by application) */
-S_HSUSBD_INFO_T gsHSInfo;
+extern const uint8_t gu8DeviceDescriptor[LEN_DEVICE];
+extern const uint8_t gu8ConfigDescriptor[];
+extern const uint8_t *gu8StringDescriptor[];
+extern const uint8_t gu8QualifierDescriptor[LEN_QUALIFIER];
+extern const uint8_t gu8HIDReportDescriptor[];
+extern const uint32_t gu32HIDReportSize[1];
+extern const uint32_t gu32ConfigHidDescIdx[2];
+
+S_HSUSBD_INFO_T gsHSInfo =
+{
+    (uint8_t *)gu8DeviceDescriptor,      /* Device descriptor */
+    (uint8_t *)gu8ConfigDescriptor,    /* Configuration descriptor */
+    (uint8_t **)gu8StringDescriptor,  /* String descriptors */
+    (uint8_t *)gu8QualifierDescriptor, /* Qualifier descriptor */
+    (uint8_t *)gu8ConfigDescriptor,   /* Full speed config */
+    (uint8_t *)gu8ConfigDescriptor,   /* High speed other config */
+    (uint8_t *)gu8ConfigDescriptor,   /* Full speed other config */
+    (uint8_t **)gu8HIDReportDescriptor,/* HID Report descriptors */
+    (uint32_t *)gu32HIDReportSize,    /* HID Report sizes */
+    (uint32_t *)gu32ConfigHidDescIdx, /* HID descriptor indices */
+};
 
 /* MSC Inquiry data */
 uint8_t g_au8InquiryID[36] = {
@@ -77,6 +98,9 @@ static uint8_t g_au8ModePage[24] = {
 static uint8_t  g_u8PageBuff[PAGE_SIZE] __attribute__((aligned(4))) = {0};
 static uint32_t g_u32BytesInPageBuf __attribute__((aligned(4))) = 0;
 uint8_t  g_u8OutBuff[EPB_MAX_PKT_SIZE] __attribute__((aligned(4))) = {0};
+
+/* Feature Report buffer for GET_REPORT (S-05 fix) */
+static uint8_t  g_u8FeatureReport[EPB_MAX_PKT_SIZE] __attribute__((aligned(4))) = {0};
 
 /* HID I2C command state */
 CMD_T gCmd;
@@ -267,6 +291,9 @@ void EPB_Handler(void)  /* Interrupt OUT handler */
 {
     uint32_t len, i;
     len = HSUSBD->EP[EPB].EPDATCNT & 0xffff;
+    /* Q-03: Boundary check - prevent buffer overflow */
+    if (len > sizeof(g_u8OutBuff))
+        len = sizeof(g_u8OutBuff);
     for (i = 0; i < len; i++)
         g_u8OutBuff[i] = HSUSBD->EP[EPB].EPDAT_BYTE;
     HID_GetOutReport(g_u8OutBuff, len);
@@ -370,9 +397,45 @@ void HID_ClassRequest(void)
             HSUSBD_CLR_CEP_INT_FLAG(HSUSBD_CEPINTSTS_INTKIF_Msk);
             HSUSBD_ENABLE_CEP_INT(HSUSBD_CEPINTEN_INTKIEN_Msk);
             break;
-        case GET_REPORT:
+        case GET_REPORT: {
+            /* S-05 FIX: GET_REPORT must return report data per HID spec */
+            /* wValue: high byte = report type (1=Input, 2=Output, 3=Feature), low byte = report ID */
+            uint8_t u8ReportType = (gUsbCmd.wValue >> 8) & 0xFF;
+            uint8_t u8ReportID = gUsbCmd.wValue & 0xFF;
+            uint16_t u16Len = gUsbCmd.wLength;
+            
+            if (u16Len == 0) {
+                HSUSBD_SET_CEP_STATE(HSUSBD_CEPCTL_ZEROLEN);
+                break;
+            }
+            
+            /* Build feature report response: [ReportID][status][data...] */
+            memset(g_u8FeatureReport, 0, sizeof(g_u8FeatureReport));
+            g_u8FeatureReport[0] = u8ReportID;  /* Report ID */
+            g_u8FeatureReport[1] = 0x00;         /* Status: OK */
+            g_u8FeatureReport[2] = 0x00;         /* I2C state: idle */
+            
+            /* Limit transfer length */
+            if (u16Len > EPB_MAX_PKT_SIZE)
+                u16Len = EPB_MAX_PKT_SIZE;
+            
+            HSUSBD_PrepareCtrlIn(g_u8FeatureReport, u16Len);
+            HSUSBD_CLR_CEP_INT_FLAG(HSUSBD_CEPINTSTS_INTKIF_Msk);
+            HSUSBD_ENABLE_CEP_INT(HSUSBD_CEPINTEN_INTKIEN_Msk);
+            break;
+        }
         case GET_IDLE:
+            /* Return current idle rate (0 = only on change) */
+            HSUSBD_PrepareCtrlIn((uint8_t *)"\x00", 1);
+            HSUSBD_CLR_CEP_INT_FLAG(HSUSBD_CEPINTSTS_INTKIF_Msk);
+            HSUSBD_ENABLE_CEP_INT(HSUSBD_CEPINTEN_INTKIEN_Msk);
+            break;
         case GET_PROTOCOL:
+            /* Return 0 = Boot Protocol */
+            HSUSBD_PrepareCtrlIn((uint8_t *)"\x00", 1);
+            HSUSBD_CLR_CEP_INT_FLAG(HSUSBD_CEPINTSTS_INTKIF_Msk);
+            HSUSBD_ENABLE_CEP_INT(HSUSBD_CEPINTEN_INTKIEN_Msk);
+            break;
         default:
             HSUSBD_SET_CEP_STATE(HSUSBD_CEPCTL_STALLEN_Msk);
             break;
@@ -384,13 +447,19 @@ void HID_ClassRequest(void)
             HSUSBD_SET_CEP_STATE(HSUSBD_CEPCTL_NAKCLR);
             HSUSBD_ENABLE_CEP_INT(HSUSBD_CEPINTEN_STSDONEIEN_Msk);
             break;
-        case SET_REPORT:
-            if (((gUsbCmd.wValue >> 8) & 0xff) == 3) {
+        case SET_REPORT: {
+            /* S-06 FIX: Handle both Feature (type=3) and Output (type=2) reports */
+            uint8_t u8ReportType = (gUsbCmd.wValue >> 8) & 0xFF;
+            /* For Output or Feature report, we accept and discard data */
+            if (u8ReportType == 0x02 || u8ReportType == 0x03) {
                 HSUSBD_CLR_CEP_INT_FLAG(HSUSBD_CEPINTSTS_STSDONEIF_Msk);
                 HSUSBD_SET_CEP_STATE(HSUSBD_CEPCTL_NAKCLR);
                 HSUSBD_ENABLE_CEP_INT(HSUSBD_CEPINTEN_STSDONEIEN_Msk);
+            } else {
+                HSUSBD_SET_CEP_STATE(HSUSBD_CEPCTL_STALLEN_Msk);
             }
             break;
+        }
         case SET_IDLE:
             HSUSBD_CLR_CEP_INT_FLAG(HSUSBD_CEPINTSTS_STSDONEIF_Msk);
             HSUSBD_SET_CEP_STATE(HSUSBD_CEPCTL_NAKCLR);
@@ -682,6 +751,12 @@ void MSC_ProcessCmd(void)
             MSC_BulkIn(g_u32MassBase, g_sCBW.dCBWDataTransferLength);
             MSC_AckCmd(0);
             break;
+
+        /* Vendor-specific CDB (0xC0-0xFF) - MSC Debug Channel */
+        case 0xC0 ... 0xFF:
+            MSC_VendorCommand(&g_sCBW);
+            break;
+
         default:
             g_au8SenseKey[0] = 0x05; g_au8SenseKey[1] = 0x20; g_au8SenseKey[2] = 0x00;
             if (g_sCBW.dCBWDataTransferLength > 0)

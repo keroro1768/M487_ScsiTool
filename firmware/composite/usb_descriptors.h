@@ -14,8 +14,8 @@
 #include <stdint.h>
 
 // Device parameters
-#define USB_VID             0x0416  // Nuvoton
-#define USB_PID             0x5020  // Composite Device
+#define USB_VID             0x04F3  /* 正式註冊 VID */
+#define USB_PID             0x0732  /* 正式註冊 PID */
 #define USB_MAX_POWER       100     // 100 mA
 
 // Endpoint parameters
@@ -29,22 +29,6 @@
 #define HID_BULK_OUT_EP     0x05    // EP5 OUT (Bulk for HID commands)
 
 #define HID_REPORT_SIZE     64      // HID report max size
-
-// Descriptor lengths
-#define LEN_DEVICE          18
-#define LEN_CONFIG         9
-#define LEN_INTERFACE      9
-#define LEN_ENDPOINT       7
-#define LEN_HID            9
-#define LEN_HID_REPORT     9
-
-// USB Descriptor Types
-#define DESC_DEVICE         0x01
-#define DESC_CONFIG         0x02
-#define DESC_INTERFACE      0x04
-#define DESC_ENDPOINT       0x05
-#define DESC_HID            0x21
-#define DESC_HID_REPORT     0x22
 
 // Class codes
 #define CLASS_MSC           0x08    // Mass Storage
@@ -79,6 +63,6 @@ extern const uint8_t gu8SerialNumberString[];
 
 // Get descriptor functions
 void* GetStringDescriptor(uint8_t idx);
-uint16_t Get HidReportDescriptorSize(void);
+uint16_t GetHidReportDescriptorSize(void);
 
 #endif // __USB_DESCRIPTORS_H__
