@@ -1,0 +1,5 @@
+[device]
+Description = "Nuvoton Nu-Link CMSIS-DAP (Interface 0)"
+VID = 0x0416
+PID = 0x511C
+MI = 0x00

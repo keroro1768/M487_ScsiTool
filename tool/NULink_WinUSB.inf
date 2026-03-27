@@ -1,0 +1,31 @@
+[Version]
+Signature   = "$Windows NT$"
+Class       = USBDevice
+ClassGuid   = {88BAE032-5A81-49f0-BC3D-A4FF138216D6}
+Provider    = %MS%
+PnpLockdown = 1
+DriverVer = 06/21/2006,10.0.26100.1150
+
+[Manufacturer]
+%Mfg% = NuLink, NTamd64
+
+[NuLink.NTamd64]
+%DeviceDesc% = WINUSB.Install, HID\VID_0416&PID_511C&MI_00
+%DeviceDesc% = WINUSB.Install, HID\VID_0416&PID_511C&REV_0100&MI_00
+
+[WINUSB.Install]
+Include = winusb.inf
+Needs = WINUSB.NT
+
+[WINUSB.Install.HW]
+Include = winusb.inf
+Needs = WINUSB.NT.HW
+
+[WINUSB.Install.Services]
+Include = winusb.inf
+Needs = WINUSB.NT.Services
+
+[Strings]
+MS = "Microsoft"
+Mfg = "Nuvoton"
+DeviceDesc = "Nuvoton Nu-Link CMSIS-DAP Interface"

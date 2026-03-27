@@ -1,0 +1,61 @@
+; Nu-Link_(Interface_0)_WinUSB.inf
+; WinUSB driver for Nuvoton Nu-Link CMSIS-DAP (Interface 0 / MI_00)
+; Self-contained INF - includes all necessary WinUSB sections directly
+; Target: USB\VID_0416&PID_511C&MI_00  (USB interface 0 of composite device)
+[Version]
+Signature   = "$Windows NT$"
+Class       = "USBDevice"
+ClassGuid   = {88BAE032-5A81-49f0-BC3D-A4FF138216D6}
+Provider    = "Nuvoton"
+DriverVer   = 03/26/2026,1.0.0.1
+
+[Strings]
+DeviceName = "Nuvoton Nu-Link CMSIS-DAP (Interface 0)"
+VendorName = "Nuvoton Technology Corp."
+
+[Manufacturer]
+%VendorName% = NuLink_WinUSB, NTamd64
+
+[NuLink_WinUSB.NTamd64]
+%DeviceName% = USB_Install, USB\VID_0416&PID_511C&MI_00
+%DeviceName% = USB_Install, USB\VID_0416&PID_511C&REV_0100&MI_00
+
+; Direct WinUSB installation - no Include reference
+[USB_Install]
+CopyFiles = USB_Install.CopyFiles
+AddReg    = USB_Install.AddReg
+
+[USB_Install.CopyFiles]
+winusb.sys,,,0x0100
+
+[USB_Install.AddReg]
+HKR,,DevLoader,,*ntkern
+HKR,,NTMPDriver,,winusb.sys
+HKR,,DeviceInterfaceGUIDs,0x10000,"{C7B2E307-0C4D-4C1E-8E7E-0A8B7D3E4F1A}"
+
+[USB_Install.HW]
+AddReg = USB_Install.HW.AddReg
+
+[USB_Install.HW.AddReg]
+HKR,,DeviceInterfaceGUIDs,0x10000,"{C7B2E307-0C4D-4C1E-8E7E-0A8B7D3E4F1A}"
+
+[USB_Install.Services]
+Addservice = WinUSB, 0x2, WinUSB.AddService
+
+[WinUSB.AddService]
+DisplayName    = "WinUSB Driver for Nu-Link Interface 0"
+Description    = "WinUSB Driver for Nuvoton Nu-Link CMSIS-DAP Interface 0"
+ServiceType    = 1                  ; SERVICE_KERNEL_DRIVER
+StartType      = 3                  ; SERVICE_DEMAND_START
+ErrorControl   = 1                  ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\winusb.sys
+AddReg         = WinUSB.AddReg
+
+[WinUSB.AddReg]
+HKR,"Parameters","MaximumTransferSize",0x10001,4096
+HKR,"Parameters","DebugZoneBitmaps",0x10001,0x0F
+HKR,"Parameters","EnableZeroPacket",0x10001,1
+
+[DestinationDirs]
+USB_Install.CopyFiles = 12  ; %SystemRoot%\System32\drivers
+DefaultDestDir         = 12

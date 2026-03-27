@@ -2,8 +2,6 @@
 build/
 firmware/*/build/
 firmware/*/*.o
-*.exe
-*.dll
 *.obj
 *.pdb
 *.ilk
@@ -36,6 +34,31 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.log
+*.db
+stderr.txt
+stdout.txt
+
+# Large binary/archive files (do NOT commit)
+*.zip
+*.7z
+*.rar
+*.msi
+*.cab
+*.iso
+*.dll
+*.exe
+*.pdb
+*.runtimeconfig.json
+*.deps.json
+
+# Large third-party toolchains (download separately)
+tool/xpack-arm-none-eabi-gcc-15.2.1-1.1/
+tool/openocd-0.12.0.7z
+tool/openocd-20260302.7z
+tool/OpenOCD-Nuvoton.zip
+tool/arm-none-eabi-gcc.zip
+tool/msys2-installer.exe
 
 # External libraries (reference only, not owned)
 D:/AiWorkSpace/KM/M480BSP/
+C:/Users/rinry/Tool/
