@@ -21,6 +21,10 @@ typedef WINUSB_INTERFACE_HANDLE* PWINUSB_INTERFACE_HANDLE;
 #define M487_VID         0x0416
 #define M487_PID         0x501E
 
+// Alternative PIDs for testing
+#define M487_PID_ALT1    0xFF20  // Vendor Loopback
+#define M487_PID_ALT2    0x5020  // Composite Device
+
 // Endpoint addresses
 #define BULK_OUT_EP      0x03
 #define BULK_IN_EP       0x82

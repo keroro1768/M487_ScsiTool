@@ -1,26 +1,38 @@
-﻿# T034 - DWT Breakpoint/Watchpoint Debug
+# VERIFY — T034
 
-## 验证文件 (VERIFY.md)
+## 基本資訊
 
-### 任务描述
-ARM CoreSight DWT 硬体断点
+| 欄位 | 內容 |
+|------|------|
+| Task ID | T034 |
+| 驗收人 | Dororo（待指定）|
+| 驗收日期 | 待填寫 |
+| 狀態 | CONDITIONAL |
 
-### 状态
-⏳ Pending
+## 交付清單
 
-### 验证项目
+- [x] DWT 研究文件
+- [x] M487 M4 Core 6 HW breakpoints + 4 watchpoints 分析
+- [x] DWT base = 0xE0001000
 
-| 验证项 | 方法 | 状态 |
-|--------|------|------|
-|        |      |      |
+## 研究結論
 
-### 验证环境
-- Windows 10/11 x64
-- Visual Studio 2022
-- USB VID=0x04F3 PID=0x0732
+✅ Research Finish — 可在 msc_debug.c 加入 DBG_BREAK_SET / DBG_WATCH_SET 擴展 MSC command
 
-### 验证记录
-| 日期 | 验证项 | 结果 | 备注 |
-|------|--------|------|------|
-|      |        |      |      |
+## 軟體驗證（已完成）
 
+| 項目 | 結果 |
+|------|------|
+| 研究文件審查 | ✅ 通過 |
+| 寄存器位址 | ✅ 正確 |
+
+## 硬體驗證（待執行）
+
+| 項目 | 結果 |
+|------|------|
+| DWT breakpoint 實際運作 | ⏸️ 待硬體 |
+| DWT watchpoint 實際運作 | ⏸️ 待硬體 |
+
+## Blocks
+
+無（研究階段已完成）

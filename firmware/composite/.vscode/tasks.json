@@ -1,0 +1,41 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build M487 Firmware",
+      "type": "shell",
+      "command": "make",
+      "args": ["-f", "Makefile"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": ["$gcc"],
+      "detail": "使用 GCC 編譯 M487 韌體"
+    },
+    {
+      "label": "Clean Build",
+      "type": "shell",
+      "command": "make",
+      "args": ["-f", "Makefile", "clean"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Flash M487",
+      "type": "shell",
+      "command": "D:/AiWorkSpace/M487_ScsiTool/tool/flash_m487.bat",
+      "args": [],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "dependsOn": ["Build M487 Firmware"]
+    }
+  ]
+}

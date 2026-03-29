@@ -1,26 +1,41 @@
-﻿# T024 - ITM/SWO Trace System
+# VERIFY — T024
 
-## 验证文件 (VERIFY.md)
+## 基本資訊
 
-### 任务描述
-itm.c/.h, SWO trace, 5层日志
+| 欄位 | 內容 |
+|------|------|
+| Task ID | T024 |
+| 驗收人 | Dororo（待指定）|
+| 驗收日期 | 待填寫 |
+| 狀態 | CONDITIONAL |
 
-### 状态
-✅ Finish
+## 交付清單
 
-### 验证项目
+- [x] itm.h / itm.c - ITM 追蹤系統
+- [x] ITM_Init() / ITM_InitWithBaud()
+- [x] ITM_Log / ITM_ERR / ITM_DBG / ITM_HEX_DUMP
+- [x] DWT cycle counter timestamps
+- [x] Module-specific macros
 
-| 验证项 | 方法 | 状态 |
-|--------|------|------|
-|        |      |      |
+## 軟體驗證（已完成）
 
-### 验证环境
-- Windows 10/11 x64
-- Visual Studio 2022
-- USB VID=0x04F3 PID=0x0732
+| 項目 | 結果 |
+|------|------|
+| 程式碼審查 | ✅ 通過 |
+| 編譯測試 | ✅ 成功 |
+| 程式碼結構 | ✅ 正確 |
 
-### 验证记录
-| 日期 | 验证项 | 结果 | 备注 |
-|------|--------|------|------|
-|      |        |      |      |
+## 硬體驗證（待執行）
 
+| 項目 | 結果 |
+|------|------|
+| SWO pin 訊號擷取 | ⏸️ 待硬體 |
+| ITM trace 實際輸出 | ⏸️ 待硬體 |
+
+## Blocks
+
+⚠️ OpenOCD LIBUSB_ERROR_ACCESS — 無法燒錄韌體驗證
+
+## 備註
+
+PB8 SWO pin MFP 值需確認

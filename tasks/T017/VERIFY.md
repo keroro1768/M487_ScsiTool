@@ -1,26 +1,33 @@
-﻿# T017 - flash.bat Error Handling 強化
+# VERIFY — T017
 
-## 验证文件 (VERIFY.md)
+## 基本資訊
 
-### 任务描述
-工具路径检查, verify 模式, 错误码
+| 欄位 | 內容 |
+|------|------|
+| Task ID | T017 |
+| 驗收人 | Tamama |
+| 驗收日期 | 2026-03-28 |
+| 狀態 | PASS |
 
-### 状态
-✅ Finish
+## 交付清單
 
-### 验证项目
+- [x] OpenOCD 路徑改為環境變數（OPENOCD_ROOT）
+- [x] tool 存在性檢查
+- [x] --verify 燒錄驗證
+- [x] 錯誤碼檢查與 early exit
 
-| 验证项 | 方法 | 状态 |
-|--------|------|------|
-|        |      |      |
+## 驗證結果
 
-### 验证环境
-- Windows 10/11 x64
-- Visual Studio 2022
-- USB VID=0x04F3 PID=0x0732
+flash.bat 已強化錯誤處理
 
-### 验证记录
-| 日期 | 验证项 | 结果 | 备注 |
-|------|--------|------|------|
-|      |        |      |      |
+## Blocks（若有）
 
+無
+
+## 備註
+
+-
+
+## Commit
+
+`7711083`（含 T017 flash.bat Error Handling）

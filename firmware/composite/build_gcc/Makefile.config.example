@@ -1,0 +1,28 @@
+# Makefile Configuration Example for M487 USB Composite Device
+# Copy this file to Makefile.config and adjust paths for your environment.
+#
+# Usage: Place this file as Makefile.config in the same directory as Makefile.
+# The main Makefile will include this file if it exists.
+
+# ============================================================================
+# Toolchain Configuration
+# ============================================================================
+# Root directory of xPack ARM GNU toolchain
+# Download from: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases
+XPKG_ROOT ?= C:/Users/rinry/Tool/xpack-arm-none-eabi-gcc-15.2.1-1.1
+
+# Root directory of BSP (M480 BSP from Nuvoton)
+BSP_DIR ?= D:/AiWorkSpace/KM/M480BSP
+
+# Root directory of OpenOCD (Nuvoton fork)
+OPENOCD_ROOT ?= C:/Users/rinry/Tool/OpenOCD-Nuvoton
+
+# ============================================================================
+# Build Directory (relative to this Makefile's location)
+# ============================================================================
+BUILD_DIR ?= build_gcc
+
+# ============================================================================
+# Example: Override on command line
+# ============================================================================
+# mingw32-make XPKG_ROOT=D:/Tools/xpack-arm-none-eabi-gcc-15.2.1-1.1 BSP_DIR=D:/MyBSP/M480BSP

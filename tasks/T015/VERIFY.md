@@ -1,26 +1,30 @@
-﻿# T015 - Magic Numbers 消除 + 統一錯誤碼
+# VERIFY — T015
 
-## 验证文件 (VERIFY.md)
+## 基本資訊
 
-### 任务描述
-i2c_constants.h, i2c_error.h
+| 欄位 | 內容 |
+|------|------|
+| Task ID | T015 |
+| 驗收人 | Giroro |
+| 驗收日期 | 2026-03-28 |
+| 狀態 | PASS |
 
-### 状态
-✅ Finish
+## 交付清單
 
-### 验证项目
+- [x] i2c_constants.h（timeout、retry、buffer size 等常量）
+- [x] i2c_error.h（統一錯誤碼）
+- [x] Magic Numbers 消除
+- [x] 統一所有 I2C 函式錯誤回傳值
 
-| 验证项 | 方法 | 状态 |
-|--------|------|------|
-|        |      |      |
+## 驗證結果
 
-### 验证环境
-- Windows 10/11 x64
-- Visual Studio 2022
-- USB VID=0x04F3 PID=0x0732
+韌體編譯成功（無錯誤）
+Commit: `7711083`
 
-### 验证记录
-| 日期 | 验证项 | 结果 | 备注 |
-|------|--------|------|------|
-|      |        |      |      |
+## Blocks（若有）
 
+無
+
+## 備註
+
+I2C_IS_ERROR()、I2C_IS_OK()、I2C_ErrorString() 巨集已建立

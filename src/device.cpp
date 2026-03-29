@@ -34,21 +34,21 @@ bool M487Device::connect()
 {
     if (m_connected) return true;
 
-    if (!m_usb.open(M487_VID, M487_PID)) {
-        return false;
+    // Try multiple PIDs
+    UINT16 pids[] = { M487_PID, 0xFF20, 0x5020, 0x0470 };
+    for (int i = 0; i < 4; i++) {
+        if (m_usb.open(M487_VID, pids[i])) {
+            m_connected = true;
+            m_cbwTag = 1;
+            DeviceInfo info;
+            if (getDeviceInfo(info)) {
+                m_totalSectors = info.totalSectors;
+                m_sectorSize = info.sectorSize;
+            }
+            return true;
+        }
     }
-
-    m_connected = true;
-    m_cbwTag = 1;
-
-    // Get device info
-    DeviceInfo info;
-    if (getDeviceInfo(info)) {
-        m_totalSectors = info.totalSectors;
-        m_sectorSize = info.sectorSize;
-    }
-
-    return true;
+    return false;
 }
 
 void M487Device::disconnect()

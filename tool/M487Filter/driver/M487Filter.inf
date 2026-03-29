@@ -1,0 +1,158 @@
+;++
+
+; M487Filter.inf
+;
+; KMDF HID Upper Filter Driver for Nuvoton M487 USB Device
+;
+; VID: 0x0416 (Nuvoton)
+; PID: 0x501E (M487 USB Storage Device)
+;
+; Installation:
+;   Right-click > Install
+;   Or: inf2cat /v2 /driver:.\driver\ /os:10_x64
+;       signtool sign /fd SHA256 /a /f certificate.pfx /p password M487Filter.cat
+;
+; Important:
+;   This INF depends on Driver Store DIRID features available starting Windows 10 1709
+;
+;--
+
+
+[Version]
+Signature="$Windows NT$"
+Class=HIDClass
+ClassGUID={745a17a0-74d3-11d0-b6fe-00a0c90f57da}
+Provider=%ProviderName%
+DriverVer=03/28/2026,1.0.0.1
+CatalogFile=M487Filter.cat
+PnPLockdown=1
+
+
+[DestinationDirs]
+DefaultDestDir = 13
+
+
+[SourceDisksNames]
+1 = %DiskName%
+
+
+[SourceDisksFiles]
+M487Filter.sys = 1
+M487Filter.cat = 1
+
+
+[ControlFlags]
+; Prevent manual installation via hardware dialogs
+ExcludeFromSelect = *
+
+
+; Manufacturer Section
+;------------------------------------------------------------------------------
+[Manufacturer]
+%MfgName%=MfgSection,NTamd64.10.0...16299
+
+
+; Device Section
+;------------------------------------------------------------------------------
+[MfgSection.NTamd64.10.0...16299]
+; M487 USB Storage Device (HID Interface)
+%HID\Vid_0416&Pid_501E.DeviceDesc%=M487Filter_Inst,HID\Vid_0416&Pid_501E
+
+; Alternative: M487 Vendor Loopback
+%HID\Vid_0416&Pid_FF20.DeviceDesc%=M487Filter_Inst,HID\Vid_0416&Pid_FF20
+
+; Alternative: M487 Composite Device
+%HID\Vid_0416&Pid_5020.DeviceDesc%=M487Filter_Inst,HID\Vid_0416&Pid_5020
+
+
+; Install Section
+;------------------------------------------------------------------------------
+[M487Filter_Inst.NTamd64]
+; Include the base HID install (hidclass.sys handles this)
+Include = hidhidu.inf
+Needs = HID_Install.NTamd64
+
+CopyFiles = M487Filter_Inst_CopyFiles.NTamd64
+
+
+[M487Filter_Inst.NTamd64.HW]
+; Register as upper filter on the HID device stack
+Include = hidhidu.inf
+Needs = HID_Install.NTamd64.HW
+AddReg = M487Filter_Inst_HWAddReg.NTamd64
+
+
+[M487Filter_Inst_HWAddReg.NTamd64]
+; ★ KEY: Register this driver as an upper filter
+; HKCR, SubKey, ValueName, DataType, Data
+; 0x00010000 = REG_MULTI_SZ
+HKR,,"UpperFilters",0x00010000,"M487Filter"
+
+
+[M487Filter_Inst_CopyFiles.NTamd64]
+M487Filter.sys
+
+
+[M487Filter_Inst.NTamd64.Services]
+; Include base HID service install
+Include = hidhidu.inf
+Needs = HID_Install.NTamd64.Services
+
+; Add our filter driver service
+AddService = M487Filter,,M487Filter_Service_Inst
+
+
+[M487Filter_Service_Inst]
+DisplayName       = %M487Filter.SvcDesc%
+ServiceType       = 1                  ; SERVICE_KERNEL_DRIVER
+StartType         = 3                 ; SERVICE_DEMAND_START
+ErrorControl      = 1                  ; SERVICE_ERROR_NORMAL
+ServiceBinary     = %13%\M487Filter.sys
+Description       = %M487Filter.SvcDesc%
+
+
+[M487Filter_Inst.NTamd64.Wdf]
+; Configure KMDF settings for the filter driver
+KmdfService = M487Filter,M487Filter_wdfset
+
+
+[M487Filter_wdfset]
+KmdfLibraryVersion = $KMDFVERSION$
+
+
+; Strings Section
+;------------------------------------------------------------------------------
+[Strings]
+
+; Provider
+ProviderName = "Nuvoton"
+
+; Manufacturer
+MfgName = "Nuvoton Electronics Corp."
+
+; Service
+M487Filter.SvcDesc = "M487 HID Upper Filter Driver"
+
+; Media
+DiskName = "M487 HID Filter Driver Disk"
+
+; HID device IDs
+HID\Vid_0416&Pid_501E.DeviceDesc = "Nuvoton M487 USB Storage Device (HID)"
+HID\Vid_0416&Pid_FF20.DeviceDesc = "Nuvoton M487 Vendor Loopback Device (HID)"
+HID\Vid_0416&Pid_5020.DeviceDesc = "Nuvoton M487 Composite Device (HID)"
+
+
+; Standard INF macros
+SPSVCINST_TAGTOFRONT  = 0x00000001
+SPSVCINST_ASSOCSERVICE= 0x00000002
+SERVICE_KERNEL_DRIVER = 1
+SERVICE_BOOT_START    = 0
+SERVICE_SYSTEM_START  = 1
+SERVICE_AUTO_START    = 2
+SERVICE_ERROR_IGNORE  = 0
+SERVICE_ERROR_NORMAL  = 1
+SERVICE_ERROR_SEVERE  = 2
+SERVICE_ERROR_CRITICAL= 3
+REG_EXPAND_SZ         = 0x00020000
+REG_DWORD            = 0x00010001
+REG_SZ               = 0x00000000

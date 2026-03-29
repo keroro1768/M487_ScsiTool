@@ -97,7 +97,7 @@ void ITM_InitWithBaud(uint32_t swo_freq_hz)
     
     /* Flush trace data */
     volatile uint32_t tmp;
-    while (TPI->FFCR & TPI_FFCR_FUNCTING_Msk) {
+    while (TPI->FFSR & TPI_FFSR_FlInProg_Msk) {
         tmp = TPI->FIFO1; (void)tmp;
     }
     (void)tmp;

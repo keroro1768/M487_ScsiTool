@@ -33,6 +33,7 @@
 #define __MSC_DEBUG_H__
 
 #include <stdint.h>
+#include "hid_i2c.h"
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* Debug Vendor CDB Opcodes                                                                                 */
@@ -50,6 +51,7 @@
 #define DBG_WRITE_REG       0x04   /**< Write CPU register */
 #define DBG_GET_INFO       0x07   /**< Get device info (FW version, chip ID, etc.) */
 #define DBG_READ_LOG       0x08   /**< Read debug log ring buffer */
+#define DBG_READ_ERRLOG    0x09   /**< Read persistent error log from Flash */
 #define DBG_ECHO           0x0F   /**< Echo test (loopback) */
 /** @} */
 

@@ -1,0 +1,31 @@
+#
+# SOURCES - WDK build file for M487Filter.sys
+#
+
+TARGETNAME=M487Filter
+TARGETTYPE=DRIVER
+
+TARGETPATH=obj
+
+MSC_WARNING_LEVEL=/W4 /WX
+
+C_DEFINES=$(C_DEFINES) -D_NDIS_
+
+SOURCES=M487Filter.c \
+        M487FilterDevice.c \
+        M487FilterWmi.c \
+        M487FilterIoctl.c \
+        M487FilterRingBuffer.c \
+        M487FilterIntercept.c \
+        M487FilterEtw.c \
+        M487Filter.rc
+
+#
+# Note: M487FilterMof.h is auto-generated from M487Filter.mof
+# by the WMI Code Generation tool (mofcomp) during build.
+# For a KMDF driver, the generated header is included via M487Filter.h
+#
+
+INCLUDES=$(INCLUDES);$(DDK_INC_PATH);$(KMDF_INC_PATH)
+
+LIBS=$(LIBS) $(KMDF_LIB_PATH)\WdfLdr$O.sys.lib

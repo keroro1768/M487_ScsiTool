@@ -1,0 +1,75 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug M487 (OpenOCD Attach)",
+      "type": "cortex-debug",
+      "request": "attach",
+      "servertype": "openocd",
+      "cwd": "${workspaceFolder}",
+      "executable": "${workspaceFolder}/build/firmware.elf",
+      "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/bin/openocd_cmsis-dap.exe",
+      "searchDir": [
+        "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/scripts"
+      ],
+      "configFiles": [
+        "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/m487_cmsis_dap.cfg"
+      ],
+      "overrideLaunchCommands": [
+        "monitor reset halt",
+        "load"
+      ],
+      "runToEntryPoint": "main",
+      "svdFile": "D:/AiWorkSpace/KM/M480BSP/Library/CMSIS/Device/Nuvoton/M480/Source/arm/M487.svd",
+      "preLaunchTask": "Build M487 Firmware",
+      "device": "M487JIDAE",
+      "interface": "swd",
+      "toolchainPrefix": "arm-none-eabi",
+      "toolchainPath": "C:/Users/rinry/Tool/xpack-arm-none-eabi-gcc-15.2.1-1.1/bin"
+    },
+    {
+      "name": "Debug M487 (OpenOCD Launch)",
+      "type": "cortex-debug",
+      "request": "launch",
+      "servertype": "openocd",
+      "cwd": "${workspaceFolder}",
+      "executable": "${workspaceFolder}/build/firmware.elf",
+      "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/bin/openocd_cmsis-dap.exe",
+      "searchDir": [
+        "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/scripts"
+      ],
+      "configFiles": [
+        "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/m487_cmsis_dap.cfg"
+      ],
+      "runToEntryPoint": "main",
+      "svdFile": "D:/AiWorkSpace/KM/M480BSP/Library/CMSIS/Device/Nuvoton/M480/Source/arm/M487.svd",
+      "preLaunchTask": "Build M487 Firmware",
+      "device": "M487JIDAE",
+      "interface": "swd"
+    },
+    {
+      "name": "OpenOCD Flash & Debug",
+      "type": "cortex-debug",
+      "request": "launch",
+      "servertype": "openocd",
+      "cwd": "${workspaceFolder}",
+      "executable": "${workspaceFolder}/build/firmware.elf",
+      "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/bin/openocd_cmsis-dap.exe",
+      "searchDir": [
+        "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/scripts"
+      ],
+      "configFiles": [
+        "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/m487_cmsis_dap.cfg"
+      ],
+      "overrideLaunchCommands": [
+        "monitor reset halt",
+        "flash write_image erase ${workspaceFolder}/build/firmware.bin 0",
+        "monitor reset halt",
+        "load"
+      ],
+      "runToEntryPoint": "main",
+      "svdFile": "D:/AiWorkSpace/KM/M480BSP/Library/CMSIS/Device/Nuvoton/M480/Source/arm/M487.svd",
+      "preLaunchTask": "Build M487 Firmware"
+    }
+  ]
+}

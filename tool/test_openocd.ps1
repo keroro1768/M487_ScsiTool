@@ -1,0 +1,6 @@
+$ErrorActionPreference = 'Continue'
+$env:Path = "C:\Users\rinry\Tool\openocd-build\bin;" + $env:Path
+$process = Start-Process -FilePath 'C:\Users\rinry\Tool\openocd-build\bin\openocd.exe' -ArgumentList '-v' -NoNewWindow -Wait -PassThru -RedirectStandardOutput 'C:\Users\rinry\Tool\stdout.txt' -RedirectStandardError 'C:\Users\rinry\Tool\stderr.txt'
+$exitCode = $process.ExitCode
+Write-Host "Exit code: $exitCode"
+Get-Content 'C:\Users\rinry\Tool\stdout.txt','C:\Users\rinry\Tool\stderr.txt' -ErrorAction SilentlyContinue

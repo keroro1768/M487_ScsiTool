@@ -13,9 +13,9 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "msc_debug.h"
 #include "NuMicro.h"
 #include "hid_i2c.h"
+#include "msc_debug.h"
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* UI2C0 (USCI_I2C) Macros                                                                                 */

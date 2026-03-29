@@ -98,28 +98,28 @@ typedef enum {
 #define ITM_LOG(fmt, ...) \
     do { \
         if (ITM_ENABLE && (ITM_LOG_LEVEL) >= (LOG_LEVEL_INFO)) \
-            ITM_Log fmt; \
+            ITM_Log(fmt, ##__VA_ARGS__); \
     } while (0)
 
 /** ITM Log Error - always printed regardless of level */
 #define ITM_ERR(fmt, ...) \
     do { \
         if (ITM_ENABLE) \
-            ITM_Log fmt; \
+            ITM_Log(fmt, ##__VA_ARGS__); \
     } while (0)
 
 /** ITM Log Debug - only printed if LOG_LEVEL >= DBG */
 #define ITM_DBG(fmt, ...) \
     do { \
         if (ITM_ENABLE && (ITM_LOG_LEVEL) >= (LOG_LEVEL_DBG)) \
-            ITM_Log fmt; \
+            ITM_Log(fmt, ##__VA_ARGS__); \
     } while (0)
 
 /** ITM Log Trace - only printed if LOG_LEVEL >= TRC */
 #define ITM_TRC(fmt, ...) \
     do { \
         if (ITM_ENABLE && (ITM_LOG_LEVEL) >= (LOG_LEVEL_TRC)) \
-            ITM_Log fmt; \
+            ITM_Log(fmt, ##__VA_ARGS__); \
     } while (0)
 
 /**

@@ -1,26 +1,33 @@
-﻿# T016 - Makefile 環境變數重構
+# VERIFY — T016
 
-## 验证文件 (VERIFY.md)
+## 基本資訊
 
-### 任务描述
-XPKG_ROOT, BSP_DIR, OPENOCD_ROOT 抽象化
+| 欄位 | 內容 |
+|------|------|
+| Task ID | T016 |
+| 驗收人 | Tamama |
+| 驗收日期 | 2026-03-28 |
+| 狀態 | PASS |
 
-### 状态
-✅ Finish
+## 交付清單
 
-### 验证项目
+- [x] XPKG_ROOT toolchain 探索機制
+- [x] BSP_DIR 改為環境變數
+- [x] Makefile.config.example 建立
+- [x] VENDOR_LBK + Composite 編譯確認
 
-| 验证项 | 方法 | 状态 |
-|--------|------|------|
-|        |      |      |
+## 驗證結果
 
-### 验证环境
-- Windows 10/11 x64
-- Visual Studio 2022
-- USB VID=0x04F3 PID=0x0732
+Makefile 重構完成，環境變數可覆寫
 
-### 验证记录
-| 日期 | 验证项 | 结果 | 备注 |
-|------|--------|------|------|
-|      |        |      |      |
+## Blocks（若有）
 
+無
+
+## 備註
+
+-
+
+## Commit
+
+`7711083`（含 T016 Makefile 環境變數重構）

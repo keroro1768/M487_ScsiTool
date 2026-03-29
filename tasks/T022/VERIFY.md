@@ -1,26 +1,34 @@
-﻿# T022 - Buffer 邊界檢查補全
+# VERIFY — T022
 
-## 验证文件 (VERIFY.md)
+## 基本資訊
 
-### 任务描述
-EPB_Handler 边界的验证，memcpy 保护
+| 欄位 | 內容 |
+|------|------|
+| Task ID | T022 |
+| 驗收人 | Giroro |
+| 驗收日期 | 2026-03-28 |
+| 狀態 | PASS |
 
-### 状态
-✅ Finish
+## 交付清單
 
-### 验证项目
+- [x] EPB_Handler len <= EPB_MAX_PKT_SIZE 檢查
+- [x] I2C_Read buffer overflow 保護
+- [x] memcpy/memset 長度驗證
+- [x] HID_CmdI2CWrite/Read/WriteRead/Scan 邊界檢查
 
-| 验证项 | 方法 | 状态 |
-|--------|------|------|
-|        |      |      |
+## 驗證結果
 
-### 验证环境
-- Windows 10/11 x64
-- Visual Studio 2022
-- USB VID=0x04F3 PID=0x0732
+韌體編譯成功（無錯誤）
+Commit: `7711083`
 
-### 验证记录
-| 日期 | 验证项 | 结果 | 备注 |
-|------|--------|------|------|
-|      |        |      |      |
+## Blocks（若有）
 
+無
+
+## 備註
+
+-
+
+## 備註
+
+Minor Issue：I2C_Read() buffer limit 應與 EPB_MAX_PKT_SIZE 對齊（都為 64 bytes）

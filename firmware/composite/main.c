@@ -20,6 +20,8 @@
 #include "itm.h"
 #include "msc_debug.h"
 #include "uart_debug.h"
+#include "self_test.h"
+#include "flash_error.h"
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* System Clock Configuration                                                                              */
@@ -114,6 +116,44 @@ int main(void)
     MAIN_LOG("Device Info: VID=0x%04X PID=0x%04X\n", USBD_VID, USBD_PID);
     ITM_LOG("[MAIN] Device Info: VID=0x%04X PID=0x%04X\n", USBD_VID, USBD_PID);
 
+    /* Run Boot-Time Self-Tests */
+    printf("Running self-tests...\n");
+    ITM_LOG("[MAIN] Running self-tests...\n");
+    SelfTest_Init();
+    SelfTest_Result_t stResult;
+    uint32_t u32FailMask = SelfTest_RunAll(&stResult);
+    printf("Self-test complete: FailedMask=0x%08X, PassedMask=0x%08X\n",
+           (unsigned int)stResult.u32FailedMask,
+           (unsigned int)stResult.u32PassedMask);
+    ITM_LOG("[MAIN] Self-test: FailedMask=0x%08X, PassedMask=0x%08X\n",
+           (unsigned int)stResult.u32FailedMask,
+           (unsigned int)stResult.u32PassedMask);
+    MAIN_LOG("SelfTest: FailMask=0x%08X, PassMask=0x%08X, DWT_cycles=%lu\n",
+           (unsigned int)stResult.u32FailedMask,
+           (unsigned int)stResult.u32PassedMask,
+           (unsigned long)(stResult.u32Timestamp[1] - stResult.u32Timestamp[0]));
+
+    /* Log individual test results */
+    for (uint32_t i = 0; i < SelfTest_GetItemCount(); i++) {
+        const char *pcName = SelfTest_GetItemName(i);
+        uint32_t u32Mask = (1UL << i);
+        if (stResult.u32FailedMask & u32Mask) {
+            printf("  [FAIL] %s\n", pcName);
+            ITM_LOG("[MAIN] [FAIL] %s\n", pcName);
+        } else if (stResult.u32PassedMask & u32Mask) {
+            printf("  [PASS] %s\n", pcName);
+            ITM_LOG("[MAIN] [PASS] %s\n", pcName);
+        } else if (stResult.u32SkippedMask & u32Mask) {
+            printf("  [SKIP] %s\n", pcName);
+            ITM_LOG("[MAIN] [SKIP] %s\n", pcName);
+        } else {
+            printf("  [----] %s (not run)\n", pcName);
+            ITM_LOG("[MAIN] [----] %s\n", pcName);
+        }
+    }
+    printf("\n");
+    ITM_LOG("[MAIN] Self-test done, result RAM at 0x%08X\n", SELF_TEST_RAM_BASE);
+
     /* Initialize I2C */
     I2C0_Init();
     printf("I2C0 initialized (PE2=CLK, PE3=DAT0, 100kHz)\n");
@@ -131,6 +171,19 @@ int main(void)
     MSC_Debug_Init();
     MSC_LOG("MSC Vendor Debug Channel initialized\n");
     MSC_TRACE("[MSC_DEBUG] Debug channel ready\n");
+
+    /* Initialize Flash Error Log (persistent error storage) */
+    {
+        uint16_t u16Head, u16Tail, u16Count;
+        if (FlashError_Init() == 0) {
+            FlashError_GetInfo(&u16Head, &u16Tail, &u16Count);
+            printf("Flash ErrorLog initialized (slot=%u, count=%u)\n", u16Head, u16Count);
+            I2C_LOG("[FLASH] ErrorLog initialized\n");
+        } else {
+            printf("Flash ErrorLog FAILED to initialize\n");
+            I2C_LOG("[FLASH] ErrorLog init FAILED\n");
+        }
+    }
 
     /* Enable USBD interrupt */
     NVIC_EnableIRQ(USBD20_IRQn);

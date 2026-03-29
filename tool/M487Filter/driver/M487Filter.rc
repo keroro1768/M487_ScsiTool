@@ -1,0 +1,14 @@
+/*
+ * M487Filter.rc
+ * Version resource for M487 HID Upper Filter Driver
+ */
+
+#include <windows.h>
+
+#define VER_FILETYPE                VFT_DRV
+#define VER_FILESUBTYPE             VFT2_DRV_SYSTEM
+#define VER_FILEDESCRIPTION_STR     "M487 HID Upper Filter Driver"
+#define VER_INTERNALNAME_STR        "M487Filter.sys"
+#define VER_ORIGINALFILENAME_STR    "M487Filter.sys"
+
+#include "common.ver"

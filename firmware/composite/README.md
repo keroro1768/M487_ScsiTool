@@ -32,8 +32,8 @@ USB Composite Device: **Mass Storage (MSC)** + **HID I2C Bridge**
 
 | 參數 | 值 |
 |------|-----|
-| VID | 0x0416 (Nuvoton) |
-| PID | 0x5020 (Composite Device) |
+| VID | 0x04F3 (Nuvoton, registered) |
+| PID | 0x0732 (Composite Device, registered) |
 | USB Speed | High-Speed (480 Mbps) |
 | Max Power | 100 mA |
 
@@ -103,8 +103,11 @@ USB Composite Device: **Mass Storage (MSC)** + **HID I2C Bridge**
 | `usb_descriptors.c` | USB Descriptors (Device, Config, HID Report) |
 | `hid_i2c.c` | HID I2C Bridge 實作 |
 | `hid_i2c.h` | HID I2C Bridge 介面 |
-| `i2c_control.c` | I2C 底層驅動 (從上層資料夾引用) |
+| `i2c_control.c` | I2C 底層驅動 (blocking, with NACK retry) |
 | `i2c_control.h` | I2C 底層驅動介面 |
+| `itm.c` / `itm.h` | ITM/SWO trace system |
+| `msc_debug.c` / `msc_debug.h` | MSC Vendor Debug Channel (CDB 0xC0-0xFF) |
+| `uart_debug.c` / `uart_debug.h` | UART structured debug log |
 
 ## 建置方式
 
@@ -124,17 +127,19 @@ USB Composite Device: **Mass Storage (MSC)** + **HID I2C Bridge**
 ## 預期行為
 
 1. 插入 M487 後，Windows 會識別為：
-   - USB Storage (可掛載磁碟機)
+   - USB Storage (可掛載磁碟機, RAM Disk 64KB)
    - HID 相容裝置 (HID I2C Bridge)
 
 2. HID I2C Bridge 可以直接通訊，不需要額外驅動
 
+3. MSC Vendor Debug Channel (CDB 0xC0-0xFF): 可透過 `msc_debug.exe` 工具讀取裝置資訊、記憶體、CPU 暫存器
+
 ## 限制
 
-- MSC Flash 大小：64 KB (128 sectors × 512 bytes)
+- MSC RAM Disk 大小：64 KB (128 sectors × 512 bytes, SRAM)
 - HID I2C 傳輸限制：
-  - Write: 最多 60 bytes
-  - Read: 最多 62 bytes
+  - Write: 最多 60 bytes (不含 Report ID + addr + len header)
+  - Read: 最多 62 bytes (不含 Report ID + status + len)
   - Write+Read: Write 最多 60 bytes, Read 最多 62 bytes
 
 ## 授權

@@ -1,0 +1,115 @@
+#PRAGMA AUTORECOVER
+
+[Dynamic,
+ Provider("WMIProv"),
+ WMI,
+ Description("M487 HID Filter Driver Information"),
+ guid("{C8E5F3B0-E8C4-4F7A-9A3D-7B2C4E1F5A9D}"),
+ locale("MS\\0x409")]
+class M487FilterDeviceInformation
+{
+    [key, read]
+     string InstanceName;
+
+    [read]
+     boolean Active;
+
+    [WmiDataId(1),
+     read,
+     write,
+     Description("Enable pass-through mode (TRUE=forward all HID reports).")]
+    boolean PassThroughEnabled;
+
+    [WmiDataId(2),
+     read,
+     Description("Whether any capture is currently enabled.")]
+    boolean CaptureEnabled;
+};
+
+[Dynamic,
+ Provider("WMIProv"),
+ WMI,
+ Description("Ring Buffer Status for M487 HID Filter Driver"),
+ guid("{D4E5F6A7-8C9D-4B5A-B3C2-1E0F2A3B4C5D}"),
+ locale("MS\\0x409")]
+class M487FilterRingBufferInfo
+{
+    [key, read]
+     string InstanceName;
+
+    [WmiDataId(1),
+     read,
+     Description("Physical address of the ring buffer.")]
+    uint64 RingBufferPhysicalAddress;
+
+    [WmiDataId(2),
+     read,
+     Description("Total byte size of the ring buffer.")]
+    uint32 RingBufferSize;
+
+    [WmiDataId(3),
+     read,
+     Description("Total number of entries ever captured.")]
+    uint64 TotalCaptured;
+
+    [WmiDataId(4),
+     read,
+     Description("Number of entries dropped (consumer too slow).")]
+    uint32 DroppedCount;
+
+    [WmiDataId(5),
+     read,
+     Description("Current number of used slots (pending read).")]
+    uint32 CurrentUsedSlots;
+
+    [WmiDataId(6),
+     read,
+     Description("Total number of slots in the ring buffer.")]
+    uint32 TotalSlots;
+
+    [WmiDataId(7),
+     read,
+     Description("Size of each slot in bytes.")]
+    uint32 SlotSize;
+
+    [WmiDataId(8),
+     read,
+     Description("Whether the ring buffer has been initialized.")]
+    boolean RingInitialized;
+};
+
+[Dynamic,
+ Provider("WMIProv"),
+ WMI,
+ Description("Intercept Configuration for M487 HID Filter Driver"),
+ guid("{E5F6A7B8-9D8C-5A4B-C3D2-0F1E2A3B4C5D}"),
+ locale("MS\\0x409")]
+class M487FilterInterceptConfigWmi
+{
+    [key, read]
+     string InstanceName;
+
+    [WmiDataId(1),
+     read,
+     write,
+     Description("Capture HID SET_FEATURE IOCTLs (host to device).")]
+    boolean CaptureSetFeature;
+
+    [WmiDataId(2),
+     read,
+     write,
+     Description("Capture HID GET_FEATURE IOCTLs (device to host).")]
+    boolean CaptureGetFeature;
+
+    [WmiDataId(3),
+     read,
+     write,
+     Description("Capture HID WRITE_REPORT IOCTLs (host to device).")]
+    boolean CaptureWriteReport;
+
+    [WmiDataId(4),
+     read,
+     write,
+     Description("Capture HID READ_REPORT IOCTLs (device to host).")]
+    boolean CaptureReadReport;
+};

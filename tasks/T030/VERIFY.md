@@ -1,26 +1,35 @@
-﻿# T030 - ITM Trace Viewer
+# VERIFY — T030
 
-## 验证文件 (VERIFY.md)
+## 基本資訊
 
-### 任务描述
-PC 端 SWO trace 接收与显示工具
+| 欄位 | 內容 |
+|------|------|
+| Task ID | T030 |
+| 驗收人 | Dororo（待指定）|
+| 驗收日期 | 待填寫 |
+| 狀態 | CONDITIONAL |
 
-### 状态
-⏳ Pending
+## 交付清單
 
-### 验证项目
+- [x] tool/itm_trace_viewer.py (32KB)
+- [x] UARTReceiver / FileReceiver / JLinkReceiver
+- [x] ITMParser + TPIU frame decode
+- [x] ANSI 彩色輸出
 
-| 验证项 | 方法 | 状态 |
-|--------|------|------|
-|        |      |      |
+## 軟體驗證（已完成）
 
-### 验证环境
-- Windows 10/11 x64
-- Visual Studio 2022
-- USB VID=0x04F3 PID=0x0732
+| 項目 | 結果 |
+|------|------|
+| Python 語法檢查 | ✅ 通過 |
+| --help 測試 | ✅ 正常 |
 
-### 验证记录
-| 日期 | 验证项 | 结果 | 备注 |
-|------|--------|------|------|
-|      |        |      |      |
+## 硬體驗證（待執行）
 
+| 項目 | 結果 |
+|------|------|
+| 實際 UART-to-USB bridge 接收 | ⏸️ 待硬體 |
+| SWO trace 解析 | ⏸️ 待硬體 |
+
+## Blocks
+
+⚠️ 需要 UART-to-USB bridge 硬體（M487 PB8 SWO → FTDI → PC）

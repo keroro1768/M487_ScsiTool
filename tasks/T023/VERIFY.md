@@ -1,26 +1,28 @@
-﻿# T023 - Windows HID Tool CLI 設計
+# VERIFY — T023
 
-## 验证文件 (VERIFY.md)
+## 基本資訊
 
-### 任务描述
-tool/hidtool/SPEC.md 完整 CLI 规格
+| 欄位 | 內容 |
+|------|------|
+| Task ID | T023 |
+| 驗收人 | Tamama |
+| 驗收日期 | 2026-03-28 |
+| 狀態 | PASS |
 
-### 状态
-✅ Finish
+## 交付清單
 
-### 验证项目
+- [x] Windows HID API 研究（HidD_*, SetupDi*）
+- [x] CLI 指令格式設計
+- [x] tool/hidtool/SPEC.md 建立
 
-| 验证项 | 方法 | 状态 |
-|--------|------|------|
-|        |      |      |
+## 驗證結果
 
-### 验证环境
-- Windows 10/11 x64
-- Visual Studio 2022
-- USB VID=0x04F3 PID=0x0732
+CLI 架構設計完成
 
-### 验证记录
-| 日期 | 验证项 | 结果 | 备注 |
-|------|--------|------|------|
-|      |        |      |      |
+## Blocks（若有）
 
+無
+
+## 備註
+
+實體實作見 T006

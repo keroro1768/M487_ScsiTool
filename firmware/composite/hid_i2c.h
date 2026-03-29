@@ -267,6 +267,7 @@ typedef struct {
 /*---------------------------------------------------------------------------------------------------------*/
 extern uint8_t volatile g_u8MscStart;
 extern uint8_t g_u8OutBuff[512];  /* EPB_MAX_PKT_SIZE */
+extern uint8_t g_au8SenseKey[4];
 extern CBW_t g_sCBW;
 extern CSW_t g_sCSW;
 

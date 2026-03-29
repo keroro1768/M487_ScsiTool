@@ -1,26 +1,29 @@
-﻿# T021 - BuildCommandRegister 截斷修復
+# VERIFY — T021
 
-## 验证文件 (VERIFY.md)
+## 基本資訊
 
-### 任务描述
-16-bit register 支援，修复截断风险
+| 欄位 | 內容 |
+|------|------|
+| Task ID | T021 |
+| 驗收人 | Giroro |
+| 驗收日期 | 2026-03-28 |
+| 狀態 | PASS |
 
-### 状态
-✅ Finish
+## 交付清單
 
-### 验证项目
+- [x] HID_Context_t reg* 從 uint8_t 改為 uint16_t
+- [x] I2C0_ReadReg/WriteReg/WriteRead 支援 uint16_t reg
+- [x] hid_parser.c printf 格式更新（%02X → %04X）
 
-| 验证项 | 方法 | 状态 |
-|--------|------|------|
-|        |      |      |
+## 驗證結果
 
-### 验证环境
-- Windows 10/11 x64
-- Visual Studio 2022
-- USB VID=0x04F3 PID=0x0732
+韌體編譯成功（無錯誤）
+Commit: `7711083`
 
-### 验证记录
-| 日期 | 验证项 | 结果 | 备注 |
-|------|--------|------|------|
-|      |        |      |      |
+## Blocks（若有）
 
+無
+
+## 備註
+
+實作時間：2026-03-27 08:01

@@ -1,0 +1,125 @@
+# Plain Makefile for M487 USB Composite Device (arm-none-eabi-gcc)
+#
+
+CC      := C:/Users/rinry/Tool/xpack-arm-none-eabi-gcc-15.2.1-1.1/bin/arm-none-eabi-gcc.exe
+OBJCOPY := C:/Users/rinry/Tool/xpack-arm-none-eabi-gcc-15.2.1-1.1/bin/arm-none-eabi-objcopy.exe
+SIZE    := C:/Users/rinry/Tool/xpack-arm-none-eabi-gcc-15.2.1-1.1/bin/arm-none-eabi-size.exe
+
+# Directories
+PROJ_DIR      := D:/AiWorkSpace/M487_ScsiTool/firmware
+COMPOSITE_DIR := D:/AiWorkSpace/M487_ScsiTool/firmware/composite
+BSP_DIR       := D:/AiWorkSpace/KM/M480BSP
+BUILD_DIR     := $(COMPOSITE_DIR)/build_gcc
+
+# MCU
+MCU := cortex-m4
+FPU := fpv4-sp-d16
+
+# Includes
+INCLUDES := -ID:/AiWorkSpace/KM/M480BSP/Library/CMSIS/Include \
+            -ID:/AiWorkSpace/KM/M480BSP/Library/Device/Nuvoton/M480/Include \
+            -ID:/AiWorkSpace/KM/M480BSP/Library/StdDriver/inc \
+            -I$(COMPOSITE_DIR) \
+            -I$(PROJ_DIR)
+
+# Flags
+CFLAGS := -mcpu=$(MCU) -mthumb -mfloat-abi=hard -mfpu=$(FPU) \
+          -O2 -Wall -fdata-sections -ffunction-sections \
+          -fno-strict-aliasing -fno-builtin \
+          $(INCLUDES) \
+          -DUSE_HXTAL=12000000 -D__ARM_ARCH_7M__=1
+
+ASFLAGS := -mcpu=$(MCU) -mthumb -mfloat-abi=hard -mfpu=$(FPU) \
+           -D__ASSEMBLY__ $(INCLUDES)
+
+LDSCRIPT := D:/AiWorkSpace/KM/M480BSP/Library/Device/Nuvoton/M480/Source/GCC/gcc_arm.ld
+LDFLAGS  := -mcpu=$(MCU) -mthumb -mfloat-abi=hard -mfpu=$(FPU) \
+            -T$(LDSCRIPT) -Wl,--gc-sections -Wl,-Map=$(BUILD_DIR)/firmware.map
+
+# Source files
+PROJ_SRCS := $(COMPOSITE_DIR)/main.c \
+             $(COMPOSITE_DIR)/hid_i2c.c \
+             $(COMPOSITE_DIR)/usb_descriptors.c \
+             $(PROJ_DIR)/i2c_control.c
+
+BSP_SRCS := $(BSP_DIR)/Library/StdDriver/src/hsusbd.c \
+            $(BSP_DIR)/Library/StdDriver/src/clk.c \
+            $(BSP_DIR)/Library/StdDriver/src/gpio.c \
+            $(BSP_DIR)/Library/StdDriver/src/sys.c \
+            $(BSP_DIR)/Library/StdDriver/src/pdma.c \
+            $(BSP_DIR)/Library/StdDriver/src/fmc.c \
+            $(BSP_DIR)/Library/StdDriver/src/usbd.c \
+            $(BSP_DIR)/Library/StdDriver/src/retarget.c \
+            $(BSP_DIR)/Library/StdDriver/src/uart.c
+
+STARTUP := $(BSP_DIR)/Library/Device/Nuvoton/M480/Source/GCC/startup_M480.S
+
+# Objects (flat in build dir)
+PROJ_OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(notdir $(PROJ_SRCS)))
+BSP_OBJS  := $(patsubst %.c,$(BUILD_DIR)/%.o,$(notdir $(BSP_SRCS)))
+STARTUP_O := $(BUILD_DIR)/startup_M480.o
+
+ALL_OBJS := $(PROJ_OBJS) $(BSP_OBJS) $(STARTUP_O)
+
+TARGET_ELF := $(BUILD_DIR)/firmware.elf
+TARGET_BIN := $(BUILD_DIR)/firmware.bin
+
+all: $(BUILD_DIR) $(ALL_OBJS) $(TARGET_ELF)
+	$(OBJCOPY) -O binary $(TARGET_ELF) $(TARGET_BIN)
+	$(OBJCOPY) -O ihex $(TARGET_ELF) $(BUILD_DIR)/firmware.hex
+	$(SIZE) $(TARGET_ELF)
+	@echo Done: $(TARGET_BIN)
+
+$(TARGET_ELF): $(ALL_OBJS)
+	@echo Linking $@
+	$(CC) $(LDFLAGS) $(ALL_OBJS) -o $@
+
+$(BUILD_DIR):
+	cmd /c "if not exist \"$(BUILD_DIR)\" mkdir \"$(BUILD_DIR)\""
+
+$(BUILD_DIR)/main.o: $(COMPOSITE_DIR)/main.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/hid_i2c.o: $(COMPOSITE_DIR)/hid_i2c.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/usb_descriptors.o: $(COMPOSITE_DIR)/usb_descriptors.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/i2c_control.o: $(PROJ_DIR)/i2c_control.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/hsusbd.o: $(BSP_DIR)/Library/StdDriver/src/hsusbd.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/clk.o: $(BSP_DIR)/Library/StdDriver/src/clk.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/gpio.o: $(BSP_DIR)/Library/StdDriver/src/gpio.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/sys.o: $(BSP_DIR)/Library/StdDriver/src/sys.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/pdma.o: $(BSP_DIR)/Library/StdDriver/src/pdma.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/fmc.o: $(BSP_DIR)/Library/StdDriver/src/fmc.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/usbd.o: $(BSP_DIR)/Library/StdDriver/src/usbd.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/retarget.o: $(BSP_DIR)/Library/StdDriver/src/retarget.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/uart.o: $(BSP_DIR)/Library/StdDriver/src/uart.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/startup_M480.o: $(STARTUP) | $(BUILD_DIR)
+	$(CC) $(ASFLAGS) -c $< -o $@
+
+clean:
+	cmd /c "del /q $(BUILD_DIR)\*.o $(BUILD_DIR)\*.elf $(BUILD_DIR)\*.bin $(BUILD_DIR)\*.hex $(BUILD_DIR)\*.map 2>nul & del /q $(BUILD_DIR)\CMakeFiles 2>nul || exit 0"
+
+.PHONY: all clean

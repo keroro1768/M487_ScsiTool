@@ -1,26 +1,36 @@
-﻿# T031 - Flash Error Log System
+# VERIFY — T031
 
-## 验证文件 (VERIFY.md)
+## 基本資訊
 
-### 任务描述
-Flash 保留区错误记录持久化
+| 欄位 | 內容 |
+|------|------|
+| Task ID | T031 |
+| 驗收人 | Dororo（待指定）|
+| 驗收日期 | 待填寫 |
+| 狀態 | CONDITIONAL |
 
-### 状态
-⏳ Pending
+## 交付清單
 
-### 验证项目
+- [x] flash_error.h / flash_error.c
+- [x] ErrorLog_Init / Write / Read / Clear
+- [x] 環形覆蓋（max 64 筆）
+- [x] DBG_READ_ERRLOG command
 
-| 验证项 | 方法 | 状态 |
-|--------|------|------|
-|        |      |      |
+## 軟體驗證（已完成）
 
-### 验证环境
-- Windows 10/11 x64
-- Visual Studio 2022
-- USB VID=0x04F3 PID=0x0732
+| 項目 | 結果 |
+|------|------|
+| 程式碼審查 | ✅ 通過 |
+| 編譯測試 | ✅ 成功 |
 
-### 验证记录
-| 日期 | 验证项 | 结果 | 备注 |
-|------|--------|------|------|
-|      |        |      |      |
+## 硬體驗證（待執行）
 
+| 項目 | 結果 |
+|------|------|
+| Flash 實際寫入 | ⏸️ 待硬體 |
+| 錯誤持久化驗證 | ⏸️ 待硬體 |
+| MSC Debug Channel 讀取 | ⏸️ 待硬體 |
+
+## Blocks
+
+⚠️ OpenOCD LIBUSB_ERROR_ACCESS — 無法燒錄韌體驗證

@@ -1,26 +1,30 @@
-﻿# T014 - I2C NACK Retry 機制
+# VERIFY — T014
 
-## 验证文件 (VERIFY.md)
+## 基本資訊
 
-### 任务描述
-I2C NACK retry，3次重试 + exponential backoff
+| 欄位 | 內容 |
+|------|------|
+| Task ID | T014 |
+| 驗收人 | Giroro |
+| 驗收日期 | 2026-03-28 |
+| 狀態 | PASS |
 
-### 状态
-✅ Finish
+## 交付清單
 
-### 验证项目
+- [x] NACK retry 機制（NACK_RETRY_MAX = 3）
+- [x] 指數 backoff 策略
+- [x] 統一錯誤碼（I2C_ERR_NACK_RETRY_EXCEEDED）
+- [x] Magic Numbers 消除
 
-| 验证项 | 方法 | 状态 |
-|--------|------|------|
-|        |      |      |
+## 驗證結果
 
-### 验证环境
-- Windows 10/11 x64
-- Visual Studio 2022
-- USB VID=0x04F3 PID=0x0732
+韌體編譯成功（無錯誤）
+Commit: `7711083` - firmware/composite: T014/T015/T021/T022
 
-### 验证记录
-| 日期 | 验证项 | 结果 | 备注 |
-|------|--------|------|------|
-|      |        |      |      |
+## Blocks（若有）
 
+無
+
+## 備註
+
+NACK retry 已實作，指數 backoff 上限 100ms

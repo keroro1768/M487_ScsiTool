@@ -24,6 +24,7 @@
 #include "hid_i2c.h"
 #include "msc_debug.h"
 #include "itm.h"
+#include "flash_error.h"
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* Debug Log Ring Buffer                                                                                    */
@@ -49,7 +50,7 @@ static volatile uint32_t s_u32LogCount = 0;
 /*---------------------------------------------------------------------------------------------------------*/
 /* Chip ID for M487 */
 #ifndef CHIP_ID
-#define CHIP_ID   0xM4800000  /* M480 series */
+#define CHIP_ID   0x00480000UL  /* M480 series */
 #endif
 
 #ifndef I2C_BUS_SPEED
@@ -205,9 +206,8 @@ void MSC_Debug_GetInfo(MSC_DeviceInfo_t *pInfo)
     pInfo->u32ChipId = CHIP_ID;
     pInfo->u16FwVersion = FW_VERSION;
     pInfo->u16BuildDate = BUILD_DATE;
-    pInfo->u32FlashSize = FMC->DFSDZ & 0x1F;  /* Read flash size from FMC */
-    pInfo->u32FlashSize = (pInfo->u32FlashSize == 0) ? 512 * 1024 : (1 << (pInfo->u32FlashSize + 1)) * 1024;
-    pInfo->u32RamSize = 160 * 1024;  /* M487 has 160KB SRAM */
+    pInfo->u32FlashSize = 512 * 1024UL;  /* M487 has 512KB flash */
+    pInfo->u32RamSize = 160 * 1024UL;  /* M487 has 160KB SRAM */
     pInfo->u8I2cSpeed = I2C_BUS_SPEED;
     pInfo->u8I2cAddr = I2C_DEFAULT_ADDR;
     pInfo->u32LogHead = s_u32LogHead;
@@ -411,6 +411,8 @@ void MSC_VendorCommand(CBW_t *pCBW)
     uint32_t u32Result;
     uint8_t *pData;
     uint8_t au8Response[32];
+    /* Shared buffer for memory read/write operations */
+    static uint8_t s_au8MemBuf[512] __attribute__((aligned(4)));
     
     if (pCBW == NULL)
         return;
@@ -450,6 +452,24 @@ void MSC_VendorCommand(CBW_t *pCBW)
         MSC_TRACE("[MSC_DEBUG] READ_LOG request, len=%lu\n", (unsigned long)u32Read);
         
         MSC_BulkIn((uint32_t)abLog, u32Read);
+        MSC_AckCmd(0);
+        break;
+    }
+    
+    /*--------------------------------------------------------*/
+    case DBG_READ_ERRLOG: {
+        /* Read persistent error log from Flash - response is ErrorLogEntry_t array */
+        static ErrorLogEntry_t s_asErrLog[ERROR_LOG_MAX_ENTRIES] __attribute__((aligned(4)));
+        uint8_t u8Count;
+        uint32_t u32Bytes;
+        
+        u8Count = ErrorLog_Read(s_asErrLog, ERROR_LOG_MAX_ENTRIES);
+        u32Bytes = (uint32_t)u8Count * ERROR_LOG_ENTRY_SIZE;
+        
+        MSC_TRACE("[MSC_DEBUG] READ_ERRLOG count=%u, bytes=%lu\n",
+                  (unsigned)u8Count, (unsigned long)u32Bytes);
+        
+        MSC_BulkIn((uint32_t)s_asErrLog, u32Bytes);
         MSC_AckCmd(0);
         break;
     }
@@ -522,8 +542,7 @@ void MSC_VendorCommand(CBW_t *pCBW)
         if (u32MemLen > 512)
             u32MemLen = 512;
         
-        /* Use static buffer for memory read result */
-        static uint8_t s_au8MemBuf[512] __attribute__((aligned(4)));
+        /* Use shared static buffer for memory read result */
         u32Result = MSC_Debug_ReadMem(u32MemAddr, s_au8MemBuf, u32MemLen);
         
         MSC_TRACE("[MSC_DEBUG] READ_MEM addr=0x%06lX len=%lu\n",

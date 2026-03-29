@@ -1,26 +1,33 @@
-﻿# T018 - usb_hid.c STUB 標記 + README
+# VERIFY — T018
 
-## 验证文件 (VERIFY.md)
+## 基本資訊
 
-### 任务描述
-STUB 标记, README.md, TEST_PLAN.md
+| 欄位 | 內容 |
+|------|------|
+| Task ID | T018 |
+| 驗收人 | Tamama |
+| 驗收日期 | 2026-03-28 |
+| 狀態 | PASS |
 
-### 状态
-✅ Finish
+## 交付清單
 
-### 验证项目
+- [x] 所有 STUB 函式加入標記
+- [x] firmware/hid-over-i2c/README.md 建立
+- [x] firmware/hid-over-i2c/TEST_PLAN.md 建立
+- [x] usb_hid.c 函式 docstring 補齊
 
-| 验证项 | 方法 | 状态 |
-|--------|------|------|
-|        |      |      |
+## 驗證結果
 
-### 验证环境
-- Windows 10/11 x64
-- Visual Studio 2022
-- USB VID=0x04F3 PID=0x0732
+文件建立完成，STUB 標記完成
 
-### 验证记录
-| 日期 | 验证项 | 结果 | 备注 |
-|------|--------|------|------|
-|      |        |      |      |
+## Blocks（若有）
 
+無
+
+## 備註
+
+-
+
+## Commit
+
+`265cb4c`（Reorganize workspace）

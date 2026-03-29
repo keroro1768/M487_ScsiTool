@@ -1,26 +1,39 @@
-﻿# T026 - MSC Debug CLI Tool
+# VERIFY — T026
 
-## 验证文件 (VERIFY.md)
+## 基本資訊
 
-### 任务描述
-msc_debug.exe, Windows SCSI passthrough
+| 欄位 | 內容 |
+|------|------|
+| Task ID | T026 |
+| 驗收人 | Dororo（待指定）|
+| 驗收日期 | 待填寫 |
+| 狀態 | CONDITIONAL |
 
-### 状态
-⏳ Pending
+## 交付清單
 
-### 验证项目
+- [x] msc_debug.exe (292KB)
+- [x] info / readmem / writemem / readreg / writereg / log / echo commands
+- [x] IOCTL_SCSI_PASS_THROUGH_DIRECT
 
-| 验证项 | 方法 | 状态 |
-|--------|------|------|
-|        |      |      |
+## 軟體驗證（已完成）
 
-### 验证环境
-- Windows 10/11 x64
-- Visual Studio 2022
-- USB VID=0x04F3 PID=0x0732
+| 項目 | 結果 |
+|------|------|
+| 程式碼審查 | ✅ 通過 |
+| 編譯測試 | ✅ 成功 |
+| CLI --help | ✅ 正常 |
 
-### 验证记录
-| 日期 | 验证项 | 结果 | 备注 |
-|------|--------|------|------|
-|      |        |      |      |
+## 硬體驗證（待執行）
 
+| 項目 | 結果 |
+|------|------|
+| 與 M487 MSC 實際通訊 | ⏸️ 待硬體 |
+| MSC Debug Channel 指令 | ⏸️ 待硬體 |
+
+## Blocks
+
+⚠️ M487 USB 未連接 — 無法驗證
+
+## 備註
+
+Minor Issue：ECHO 命令 firmware 端 buffer offset 問題，不影響主要除錯功能

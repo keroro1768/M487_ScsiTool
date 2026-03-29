@@ -1,0 +1,25 @@
+{
+  "configurations": [
+    {
+      "name": "M487",
+      "includePath": [
+        "${workspaceFolder}/**",
+        "${workspaceFolder}/../../../KM/M480BSP/Library/CMSIS/CMSIS/Include",
+        "${workspaceFolder}/../../../KM/M480BSP/Library/CMSIS/Device/Nuvoton/M480/Include",
+        "${workspaceFolder}/../../../KM/M480BSP/StdDriver/inc",
+        "${workspaceFolder}/dwt",
+        "${workspaceFolder}/gdb_rsp"
+      ],
+      "defines": [
+        "__M487JIDAE__",
+        "ARM_MATH_CM4",
+        "USE_ARM_MATH"
+      ],
+      "compilerPath": "C:/Users/rinry/Tool/xpack-arm-none-eabi-gcc-15.2.1-1.1/bin/arm-none-eabi-gcc.exe",
+      "cStandard": "c11",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "gcc-arm"
+    }
+  ],
+  "version": 4
+}
