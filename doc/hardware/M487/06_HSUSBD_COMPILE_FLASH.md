@@ -45,15 +45,16 @@ New-Item -ItemType Junction -Path "D:\AiWorkSpace\KM\M487-Examples\Library" -Tar
 
 ### 前置需求
 - Nu-Link 驅動已安裝（Interface 1 為 WinUSB）
-- Nuvoton OpenOCD 已就緒
+- OpenOCD 已就緒（使用 `openocd.bat`）
 
 ### 燒錄指令
 
+> ⚠️ **2026-03-30 更新**：使用 `openocd.bat` + `nulink_m487_ice.cfg`
+
 ```powershell
-& "C:\Users\rinry\Tool\OpenOCD-Nuvoton\OpenOCD\bin\openocd.exe" `
-  -s "C:\Users\rinry\Tool\OpenOCD-Nuvoton\OpenOCD\scripts" `
-  -f interface/nulink.cfg `
-  -f target/numicroM4.cfg `
+D:\AiWorkSpace\M487_ScsiTool\tool\openocd\openocd.bat `
+  -s "D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD-Nuvoton\OpenOCD\scripts" `
+  -f "D:\AiWorkSpace\M487_ScsiTool\tool\openocd\nulink_m487_ice.cfg" `
   -c "init" `
   -c "reset halt" `
   -c "flash write_image erase D:/AiWorkSpace/KM/M487-Examples/Projects/HSUSBD_VENDOR_LBK/HSUSBD_VENDOR_LBK/KEIL/obj/HSUSBD_VENDOR_LBK.bin 0" `

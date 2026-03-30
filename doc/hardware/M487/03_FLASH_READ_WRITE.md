@@ -1,5 +1,7 @@
 # M487 Flash 讀寫流程
 
+> ⚠️ **2026-03-30 更新**：OpenOCD 路徑已更正，請使用 `openocd.bat` + `nulink_m487_ice.cfg`
+
 ## 前提條件
 
 1. **Nu-Link 驅動已安裝**
@@ -7,7 +9,8 @@
    - 檢查: 裝置管理員 → Nuvoton Nu-Link USB
 
 2. **OpenOCD 已就緒**
-   - 路徑: `C:\Users\rinry\Tool\OpenOCD-Nuvoton\OpenOCD\bin\openocd.exe`
+   - 路徑: `D:\AiWorkSpace\M487_ScsiTool\tool\openocd\openocd.bat`（推薦）
+   - 或: `D:\AiWorkSpace\M487_ScsiTool\tool\openocd-build\bin\openocd.exe`
 
 3. **確認 M487 連接**
    ```
@@ -19,64 +22,49 @@
 ## 快速測試 (連線驗證)
 
 ```powershell
-& "C:\Users\rinry\Tool\OpenOCD-Nuvoton\OpenOCD\bin\openocd.exe" `
-  -s "C:\Users\rinry\Tool\OpenOCD-Nuvoton\OpenOCD\scripts" `
-  -f interface/nulink.cfg `
-  -f target/numicroM4.cfg `
+D:\AiWorkSpace\M487_ScsiTool\tool\openocd\openocd.bat `
+  -s "D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD-Nuvoton\OpenOCD\scripts" `
+  -f "D:\AiWorkSpace\M487_ScsiTool\tool\openocd\nulink_m487_ice.cfg" `
   -c "init" -c "targets" -c "shutdown"
 ```
 
 **預期輸出:**
 ```
+Info : clock speed 4000 kHz
+Info : Nu-Link firmware_version 7946, product_id (0x40012009)
+Info : Adapter is Nu-Link
 Info : IDCODE: 0x2BA01477
-Info : NuMicro.cpu: hardware has 6 breakpoints, 4 watchpoints
- 0* NuMicro.cpu hla_target little NuMicro.cpu halted
-```
-
----
-
-## 讀取 Flash
-
-### 讀取全部 (512KB)
-```powershell
-& "C:\Users\rinry\Tool\OpenOCD-Nuvoton\OpenOCD\bin\openocd.exe" `
-  -s "C:\Users\rinry\Tool\OpenOCD-Nuvoton\OpenOCD\scripts" `
-  -f interface/nulink.cfg `
-  -f target/numicroM4.cfg `
-  -c "init" -c "reset halt" `
-  -c "flash read_bank 0 C:/Users/rinry/m487_flash.bin 0 0x80000" `
-  -c "shutdown"
-```
-
-**速度參考:** ~3.2 KiB/s，512KB 約 2.5 分鐘
-
-### 讀取前 4KB (測試用)
-```powershell
-& "C:\Users\rinry\Tool\OpenOCD-Nuvoton\OpenOCD\bin\openocd.exe" `
-  -s "C:\Users\rinry\Tool\OpenOCD-Nuvoton\OpenOCD\scripts" `
-  -f interface/nulink.cfg `
-  -f target/numicroM4.cfg `
-  -c "init" -c "reset halt" `
-  -c "flash read_bank 0 C:/Users/rinry/m487_test.bin 0 0x1000" `
-  -c "shutdown"
+Info : [M487.cpu] Cortex-M4 r0p1 processor detected
+Info : [M487.cpu] target has 6 breakpoints, 4 watchpoints
+    TargetName         Type       Endian TapName            State
+--  ------------------ ---------- ------ ------------------ ------------
+ 0* M487.cpu           hla_target little M487.cpu           unknown
+shutdown command invoked
 ```
 
 ---
 
 ## 燒錄 Flash
 
+> ⚠️ **2026-03-30 更新**：使用 `openocd.bat` + `nulink_m487_ice.cfg`
+
 ### 燒錄整個檔案
 ```powershell
-& "C:\Users\rinry\Tool\OpenOCD-Nuvoton\OpenOCD\bin\openocd.exe" `
-  -s "C:\Users\rinry\Tool\OpenOCD-Nuvoton\OpenOCD\scripts" `
-  -f interface/nulink.cfg `
-  -f target/numicroM4.cfg `
+D:\AiWorkSpace\M487_ScsiTool\tool\openocd\openocd.bat `
+  -s "D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD-Nuvoton\OpenOCD\scripts" `
+  -f "D:\AiWorkSpace\M487_ScsiTool\tool\openocd\nulink_m487_ice.cfg" `
   -c "init" -c "reset halt" `
-  -c "flash write_image erase C:/Users/rinry/m487_flash.bin 0" `
+  -c "flash write_image erase C:/firmware.bin 0" `
   -c "shutdown"
 ```
 
 **速度參考:** ~7.4 KiB/s，512KB 約 70 秒
+
+**成功輸出：**
+```
+Info : Write 63996 bytes to flash
+Info : Verified OK
+```
 
 ### 燒錄後驗證
 燒錄時 OpenOCD 會自動校驗寫入的資料

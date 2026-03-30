@@ -1,7 +1,20 @@
 # VSCode + OpenOCD + GCC + GDB — M487 ICE 開發環境完整設定
 
-> 最後更新：2026-03-29
+> 最後更新：**2026-03-30**（根據已驗證的 ICE 連線方案更新）
 > 適用對象：完全不會 Linux/VSCode 的 Windows 工程師
+
+---
+
+## ⚠️ 重要更新（2026-03-30）
+
+**燒錄 + Debug 已完全驗證成功！** 所有設定已更正。
+
+| 之前（錯誤）| 之後（正確）|
+|-------------|-------------|
+| `openocd_cmsis-dap.exe` | `openocd.bat`（wrapper，含 MSYS2 DLL PATH）|
+| `m487_cmsis_dap.cfg` | `nulink_m487_ice.cfg` |
+| `cmsis-dap` driver | `hla` driver |
+| OpenOCD-Nuvoton scripts | OpenOCD-Nuvoton scripts（路徑不變）|
 
 ---
 
@@ -68,9 +81,26 @@ arm-none-eabi-gcc --version
 
 選擇 `xpack-arm-none-eabi-gcc-15.2.1-1.1-win32-x64.zip`
 
-### 1.4 OpenOCD（如果還沒安裝）
+### 1.4 OpenOCD
 
-已安裝位置：`D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD-Nuvoton\OpenOCD\bin\openocd_cmsis-dap.exe`
+> ⚠️ **2026-03-30 修正：** 必須使用 `openocd-build` 而非 `OpenOCD-Nuvoton` 內的 binary！
+
+**已安裝位置（正確的 build）：**
+```
+D:\AiWorkSpace\M487_ScsiTool\tool\openocd-build\bin\openocd.exe
+```
+版本：OpenOCD 0.12.0+dev (2026-03-25)
+
+**Wrapper（推薦使用）：**
+```
+D:\AiWorkSpace\M487_ScsiTool\tool\openocd\openocd.bat
+```
+Wrapper 會自動設定 MSYS2 DLL PATH，呼叫正確的 openocd.exe。
+
+**為何不用 `OpenOCD-Nuvoton` 內的 binary？**
+- `openocd_cmsis-dap.exe`：HLA NULINK 初始化失敗
+- `sysprogs/openocd.exe`：沒有 NULINK layout
+- 只有 `openocd-build` 的版本完整支援 NULINK
 
 ---
 
@@ -88,39 +118,61 @@ OpenOCD 需要透過 **WinUSB** 或 **libusb** 存取 Nu-Link。
 
 ### 2.2 檢查 Nu-Link 驅動
 
-**方法一：裝置管理員**
+**方法一：PowerShell**
 
-1. 插上 Nu-Link USB
-2. Windows 鍵 + X → 裝置管理員
-3. 找到 `NuLink [0416:511C]`
-4. 展開，確認 Interface 1 是 **WinUSB** 或 **libusbK**
+```powershell
+Get-PnpDevice | Where-Object { $_.DeviceId -match '0416.*511C' } |
+  Format-Table FriendlyName, Status, InstanceId
+```
+
+**預期輸出：**
+```
+FriendlyName                            Status  InstanceId
+------------                            ------  ----------
+USB Composite Device                    OK      USB\VID_0416&PID_511C\...
+Nuvoton Nu-Link USB                     OK      USB\VID_0416&PID_511C&MI_00\...
+Nuvoton Nu-Link USB                     OK      USB\VID_0416&PID_511C&MI_01\...
+```
 
 **方法二：用 Zadig 檢查**
 
 1. 開啟 `D:\AiWorkSpace\M487_ScsiTool\tool\external\zadig-2.9.exe`
 2. Options → List All Devices
 3. 找 `NuLink [0416:511C]`
-4. 看 Current Driver 是什麼
+4. 看 Current Driver
 
-### 2.3 如果不是 WinUSB/LibusbK
+### 2.3 Interface 1 驅動狀態確認
 
-用 Zadig 更換驅動：
-1. Options → List All Devices
-2. 找 `NuLink [0416:511C]` Interface 1
-3. 選擇 **WinUSB (v6.x.x.x)**
-4. 點 **Replace Driver**
+```powershell
+Get-PnpDeviceProperty -InstanceId 'USB\VID_0416&PID_511C&MI_01\...' -KeyName 'DEVPKEY_Device_DriverInfPath'
+```
+
+確認 driver = `oemXX.inf`（WINUSB）。
 
 ### 2.4 驗證 OpenOCD 可以連線
 
-```cmd
-cd D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD-Nuvoton\OpenOCD\bin
-openocd_cmsis-dap.exe -s ../scripts -f D:/AiWorkSpace/M487_ScsiTool/tool/openocd/m487_cmsis_dap.cfg -c "init" -c "targets" -c "shutdown"
+```powershell
+D:\AiWorkSpace\M487_ScsiTool\tool\openocd\openocd.bat -c "adapter list"
 ```
 
-**成功輸出：**
+**成功輸出：** 看見 `hla { jtag swd }` 在清單中。
+
+```powershell
+D:\AiWorkSpace\M487_ScsiTool\tool\openocd\openocd.bat -c "init" -c "targets" -c "shutdown"
 ```
-Info : NuMicro.cpu: hardware has 6 breakpoints, 4 watchpoints
-Info : NuMicro.cpu halted
+
+**成功輸出（已驗證）：**
+```
+Info : clock speed 4000 kHz
+Info : Nu-Link firmware_version 7946, product_id (0x40012009)
+Info : Adapter is Nu-Link
+Info : IDCODE: 0x2BA01477
+Info : [M487.cpu] Cortex-M4 r0p1 processor detected
+Info : [M487.cpu] target has 6 breakpoints, 4 watchpoints
+    TargetName         Type       Endian TapName            State
+--  ------------------ ---------- ------ ------------------ ------------
+ 0* M487.cpu           hla_target little M487.cpu           unknown
+shutdown command invoked
 ```
 
 ---
@@ -130,14 +182,14 @@ Info : NuMicro.cpu halted
 ### 3.1 開啟 M487_ScsiTool 資料夾
 
 ```vscode
-File → Open Folder → D:\AiWorkSpace\M487_ScsiTool
+File → Open Folder → D:\AiWorkSpace\M487_ScsiTool\firmware\composite
 ```
 
 ### 3.2 建立 `.vscode` 資料夾
 
 在 `D:\AiWorkSpace\M487_ScsiTool\firmware\composite\` 建立 `.vscode` 資料夾
 
-### 3.3 建立 `c_cpp_properties.json`（C/C++ 路径）
+### 3.3 建立 `c_cpp_properties.json`（C/C++ 路徑）
 
 ```json
 {
@@ -208,8 +260,15 @@ File → Open Folder → D:\AiWorkSpace\M487_ScsiTool
     {
       "label": "Flash M487",
       "type": "shell",
-      "command": "D:/AiWorkSpace/M487_ScsiTool/tool/flash_m487.bat",
-      "args": [],
+      "command": "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/openocd.bat",
+      "args": [
+        "-s", "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/scripts",
+        "-f", "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/nulink_m487_ice.cfg",
+        "-c", "init",
+        "-c", "reset halt",
+        "-c", "flash write_image erase ${workspaceFolder}/build/firmware.bin 0",
+        "-c", "shutdown"
+      ],
       "options": {
         "cwd": "${workspaceFolder}"
       },
@@ -231,14 +290,15 @@ File → Open Folder → D:\AiWorkSpace\M487_ScsiTool
 
 ### 5.1 建立燒錄 Script
 
+> ⚠️ **2026-03-30 修正：** 更新路徑使用 `openocd.bat` + `nulink_m487_ice.cfg`
+
 在 `D:\AiWorkSpace\M487_ScsiTool\tool\` 建立 `flash_m487.bat`：
 
 ```bat
 @echo off
-set OPENOCD_ROOT=D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD-Nuvoton\OpenOCD
-set OPENOCD_BIN=%OPENOCD_ROOT%\bin\openocd_cmsis-dap.exe
-set OPENOCD_SCR=%OPENOCD_ROOT%\scripts
-set CFG_FILE=D:\AiWorkSpace\M487_ScsiTool\tool\openocd\m487_cmsis_dap.cfg
+set OPENOCD_BAT=D:\AiWorkSpace\M487_ScsiTool\tool\openocd\openocd.bat
+set OPENOCD_SCR=D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD-Nuvoton\OpenOCD\scripts
+set CFG_FILE=D:\AiWorkSpace\M487_ScsiTool\tool\openocd\nulink_m487_ice.cfg
 set FIRMWARE=%1
 
 if "%FIRMWARE%"=="" (
@@ -246,7 +306,7 @@ if "%FIRMWARE%"=="" (
 )
 
 echo Flashing: %FIRMWARE%
-"%OPENOCD_BIN%" -s "%OPENOCD_SCR%" -f "%CFG_FILE%" -c "init" -c "reset halt" -c "flash write_image erase %FIRMWARE% 0" -c "shutdown"
+"%OPENOCD_BAT%" -s "%OPENOCD_SCR%" -f "%CFG_FILE%" -c "init" -c "reset halt" -c "flash write_image erase %FIRMWARE% 0" -c "shutdown"
 pause
 ```
 
@@ -259,6 +319,8 @@ pause
 ---
 
 ## Step 6：設定 Debug（重要！）
+
+> ⚠️ **2026-03-30 修正：** 所有路徑已更新為 `openocd.bat` + `nulink_m487_ice.cfg`
 
 ### 6.1 建立 `launch.json`
 
@@ -275,10 +337,12 @@ pause
       "servertype": "openocd",
       "cwd": "${workspaceFolder}",
       "executable": "${workspaceFolder}/build/firmware.elf",
-      "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/bin/openocd_cmsis-dap.exe",
-      "searchDir": ["D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/scripts"],
+      "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/openocd.bat",
+      "searchDir": [
+        "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/scripts"
+      ],
       "configFiles": [
-        "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/m487_cmsis_dap.cfg"
+        "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/nulink_m487_ice.cfg"
       ],
       "overrideLaunchCommands": [
         "monitor reset halt",
@@ -289,10 +353,8 @@ pause
       "preLaunchTask": "Build M487 Firmware",
       "device": "M487JIDAE",
       "interface": "swd",
-      "serialNumber": "",
       "toolchainPrefix": "arm-none-eabi",
-      "toolchainPath": "C:/Users/rinry/Tool/xpack-arm-none-eabi-gcc-15.2.1-1.1/bin",
-      "svdPath": "D:/AiWorkSpace/KM/M480BSP/Library/CMSIS/Device/Nuvoton/M480/Source/arm/M487.svd"
+      "toolchainPath": "C:/Users/rinry/Tool/xpack-arm-none-eabi-gcc-15.2.1-1.1/bin"
     },
     {
       "name": "Debug M487 (OpenOCD Launch)",
@@ -301,10 +363,12 @@ pause
       "servertype": "openocd",
       "cwd": "${workspaceFolder}",
       "executable": "${workspaceFolder}/build/firmware.elf",
-      "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/bin/openocd_cmsis-dap.exe",
-      "searchDir": ["D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/scripts"],
+      "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/openocd.bat",
+      "searchDir": [
+        "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/scripts"
+      ],
       "configFiles": [
-        "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/m487_cmsis_dap.cfg"
+        "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/nulink_m487_ice.cfg"
       ],
       "runToEntryPoint": "main",
       "svdFile": "D:/AiWorkSpace/KM/M480BSP/Library/CMSIS/Device/Nuvoton/M480/Source/arm/M487.svd",
@@ -319,10 +383,12 @@ pause
       "servertype": "openocd",
       "cwd": "${workspaceFolder}",
       "executable": "${workspaceFolder}/build/firmware.elf",
-      "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/bin/openocd_cmsis-dap.exe",
-      "searchDir": ["D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/scripts"],
+      "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/openocd.bat",
+      "searchDir": [
+        "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/scripts"
+      ],
       "configFiles": [
-        "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/m487_cmsis_dap.cfg"
+        "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/nulink_m487_ice.cfg"
       ],
       "overrideLaunchCommands": [
         "monitor reset halt",
@@ -331,7 +397,8 @@ pause
         "load"
       ],
       "runToEntryPoint": "main",
-      "svdFile": "D:/AiWorkSpace/KM/M480BSP/Library/CMSIS/Device/Nuvoton/M480/Source/arm/M487.svd"
+      "svdFile": "D:/AiWorkSpace/KM/M480BSP/Library/CMSIS/Device/Nuvoton/M480/Source/arm/M487.svd",
+      "preLaunchTask": "Build M487 Firmware"
     }
   ]
 }
@@ -342,11 +409,11 @@ pause
 | 欄位 | 說明 |
 |------|------|
 | `servertype` | 使用 OpenOCD |
-| `serverpath` | OpenOCD.exe 路徑 |
-| `configFiles` | OpenOCD 設定檔 |
+| `serverpath` | OpenOCD Wrapper 路徑（`openocd.bat`）|
+| `configFiles` | OpenOCD 設定檔（`nulink_m487_ice.cfg`）|
 | `executable` | 要 Debug 的 .elf 檔 |
 | `runToEntryPoint` | 停在哪個函式（預設 main）|
-| `svdFile` | 周邊暫存器視圖定義 |
+| `svdFile` | 周邊暫存器視圖定義（M487.svd）|
 
 ---
 
@@ -392,8 +459,6 @@ Nu-Link
 
 ---
 
----
-
 ## ✅ 網路佐證
 
 這份文件的設定方式與以下**官方/權威資源**一致：
@@ -433,12 +498,12 @@ Nu-Link
 
 檢查：
 - [ ] Nu-Link USB 有沒有插？
-- [ ] OpenOCD 可以連線嗎？（燒錄測試）
-- [ ] .elf 檔存在嗎？
+- [ ] OpenOCD 可以連線嗎？（`openocd.bat -c "adapter list"`）
+- [ ] .elf 檔存在嗎？（先 `Ctrl+Shift+B` 編譯）
 
 ### Q2：LIBUSB_ERROR_ACCESS
 
-這是驅動問題，見 Step 2 確認 WinUSB 驅動。
+這是驅動問題，見 Step 2 確認 WinUSB 驅動。**或使用 `openocd.bat` wrapper**（自動設定 MSYS2 DLL PATH）。
 
 ### Q3：停在 HardFault
 
@@ -464,13 +529,17 @@ Nu-Link
 D:\AiWorkSpace\M487_ScsiTool\
 └── firmware\
     └── composite\
-        ├── build\           ← 編譯產出（.elf, .bin）
+        ├── build\               ← 編譯產出（.elf, .bin）
         ├── .vscode\
         │   ├── c_cpp_properties.json   ← C/C++ 路徑設定
-        │   ├── launch.json           ← Debug 設定
-        │   └── tasks.json            ← 編譯任務
+        │   ├── launch.json              ← Debug 設定
+        │   └── tasks.json               ← 編譯任務
         ├── Makefile
         └── ...
+└── tool\
+    └── openocd\
+        ├── openocd.bat              ← 🚀 OpenOCD Wrapper（含 DLL PATH）
+        └── nulink_m487_ice.cfg      ← 🚀 OpenOCD 設定檔（已驗證）
 ```
 
 ---
@@ -483,3 +552,5 @@ D:\AiWorkSpace\M487_ScsiTool\
 - ✅ **F9**：設斷點
 - ✅ **Watch 視窗**：看變數
 - ✅ **REGISTERS 視窗**：看 CPU 暫存器
+
+**快速上手見：[doc/ICE/QUICK_START.md](../ICE/QUICK_START.md)**

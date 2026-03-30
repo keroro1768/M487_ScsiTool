@@ -78,16 +78,35 @@ mflash erase <bank>
 
 ## Nu-Link 特定設定
 
+> ⚠️ **2026-03-30 修正：** 以下為已驗證的正確命令序列（使用 `hla` driver）
+
 ```tcl
-# 指定 Nu-Link
-interface nulink
+# 1. 指定 HLA adapter driver（不是 cmsis-dap！）
+adapter driver hla
 
-# SWD 傳輸 (自動選擇)
-transport select hla_swd
+# 2. 指定 nulink layout（不是 cmsis-dap！）
+hla layout nulink
 
-# 設定時脈 (kHz)
-adapter speed 1000
+# 3. 指定 VID/PID
+hla vid_pid 0x0416 0x511C
+
+# 4. 選擇傳輸協定
+transport select swd
+
+# 5. 建立 SWD DAP
+swd newdap M487 cpu -expected-id 0x2BA01477
+
+# 6. 建立 DAP 實例
+dap create M487.dap -chain-position M487.cpu
+
+# 7. 建立 target
+target create M487.cpu cortex_m -dap M487.dap
+
+# 8. 設定時脈 (kHz)
+adapter speed 4000
 ```
+
+完整設定檔已驗證：`tool/openocd/nulink_m487_ice.cfg`
 
 ---
 
@@ -183,6 +202,11 @@ shutdown
 
 | 錯誤 | 原因 | 解決 |
 |------|------|------|
-| LIBUSB_ERROR_ACCESS | 權限不足 | 用 admin 執行或確認驅動 |
+| LIBUSB_ERROR_ACCESS | 缺少 MSYS2 DLL | 使用 `openocd.bat` wrapper 或設定 PATH |
+| LIBUSB_ERROR_ACCESS | 用了錯誤的 driver | 使用 `hla` 而非 `cmsis-dap` driver |
+| `No adapter layout 'nulink'` | 用了錯誤的 OpenOCD build | 使用 `openocd-build\bin\openocd.exe` |
+| `CMSIS-DAP command CMD_INFO failed` | 用了錯誤的 driver | 見上方正確命令序列 |
 | couldn't open file | 路徑錯誤 | 確認目錄存在 |
 | unknown command | 指令錯誤 | 檢查 TCL 語法 |
+
+**詳見：[doc/ICE/01_PROBLEM.md](../ICE/01_PROBLEM.md)**

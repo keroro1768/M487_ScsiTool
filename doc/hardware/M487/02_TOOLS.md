@@ -2,14 +2,15 @@
 
 ## 已安裝工具
 
-### OpenOCD-Nuvoton
+### OpenOCD（已驗證可用）
 
 | 項目 | 內容 |
 |------|------|
-| **位置** | `C:\Users\rinry\Tool\OpenOCD-Nuvoton\` |
-| **版本** | 0.10.022.0-dev-00493 |
+| **位置** | `D:\AiWorkSpace\M487_ScsiTool\tool\openocd-build\bin\openocd.exe` |
+| **版本** | 0.12.0+dev-02429-ge4c49d860 (2026-03-25) |
 | **支援晶片** | Nuvoton NuMicro M4 系列 |
-| **支援調試器** | Nu-Link, J-Link, CMSIS-DAP |
+| **支援調試器** | Nu-Link（HLA driver）、J-Link、ST-Link、CMSIS-DAP |
+| **Wrapper** | `tool\openocd\openocd.bat`（含 MSYS2 DLL）|
 
 ### Keil MDK
 
@@ -30,18 +31,22 @@
 
 ## OpenOCD 設定
 
+> ⚠️ **2026-03-30 更新**：請使用 `openocd-build` 而非 `OpenOCD-Nuvoton` 內的 binary
+
 ### 設定檔位置
 
 | 檔案 | 路徑 |
 |------|------|
-| Nu-Link interface | `C:\Users\rinry\Tool\OpenOCD-Nuvoton\OpenOCD\scripts\interface\nulink.cfg` |
-| M4 target | `C:\Users\rinry\Tool\OpenOCD-Nuvoton\OpenOCD\scripts\target\numicroM4.cfg` |
+| OpenOCD Binary | `D:\AiWorkSpace\M487_ScsiTool\tool\openocd-build\bin\openocd.exe` |
+| OpenOCD Wrapper | `D:\AiWorkSpace\M487_ScsiTool\tool\openocd\openocd.bat`（推薦）|
+| OpenOCD Scripts | `D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD-Nuvoton\OpenOCD\scripts\` |
+| M487 Config | `D:\AiWorkSpace\M487_ScsiTool\tool\openocd\nulink_m487_ice.cfg`（已驗證）|
 
-### 環境變數 (可選)
+### 環境變數（使用 Wrapper 即可）
 
-建議將 OpenOCD 加入 PATH:
 ```powershell
-$env:PATH += ";C:\Users\rinry\Tool\OpenOCD-Nuvoton\OpenOCD\bin"
+# 不需要手動設定 PATH，使用 openocd.bat wrapper
+D:\AiWorkSpace\M487_ScsiTool\tool\openocd\openocd.bat -c "adapter list"
 ```
 
 ---
