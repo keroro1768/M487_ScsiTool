@@ -1,4 +1,4 @@
-﻿{
+{
   "version": "0.2.0",
   "configurations": [
     {
@@ -7,13 +7,13 @@
       "request": "attach",
       "servertype": "openocd",
       "cwd": "${workspaceFolder}",
-      "executable": "${workspaceFolder}/build/firmware.elf",
+      "executable": "${workspaceFolder}/build_gcc/firmware.elf",
       "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD/openocd.bat",
       "searchDir": [
-        "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/scripts"
+        "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD/scripts"
       ],
       "configFiles": [
-        "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/nulink_m487_ice.cfg"
+        "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD/nulink_m487_ice.cfg"
       ],
       "overrideLaunchCommands": [
         "monitor reset halt",
@@ -33,13 +33,13 @@
       "request": "launch",
       "servertype": "openocd",
       "cwd": "${workspaceFolder}",
-      "executable": "${workspaceFolder}/build/firmware.elf",
+      "executable": "${workspaceFolder}/build_gcc/firmware.elf",
       "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD/openocd.bat",
       "searchDir": [
-        "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/scripts"
+        "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD/scripts"
       ],
       "configFiles": [
-        "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/nulink_m487_ice.cfg"
+        "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD/nulink_m487_ice.cfg"
       ],
       "runToEntryPoint": "main",
       "svdFile": "D:/AiWorkSpace/KM/M480BSP/Library/CMSIS/Device/Nuvoton/M480/Source/arm/M487.svd",
@@ -53,23 +53,27 @@
       "request": "launch",
       "servertype": "openocd",
       "cwd": "${workspaceFolder}",
-      "executable": "${workspaceFolder}/build/firmware.elf",
+      "executable": "${workspaceFolder}/build_gcc/firmware.elf",
       "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD/openocd.bat",
       "searchDir": [
-        "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/scripts"
+        "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD/scripts"
       ],
       "configFiles": [
-        "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/nulink_m487_ice.cfg"
+        "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD/nulink_m487_ice.cfg"
       ],
       "overrideLaunchCommands": [
         "monitor reset halt",
-        "flash write_image erase ${workspaceFolder}/build/firmware.bin 0",
+        "flash write_image erase ${workspaceFolder}/build_gcc/firmware.bin 0",
         "monitor reset halt",
         "load"
       ],
       "runToEntryPoint": "main",
       "svdFile": "D:/AiWorkSpace/KM/M480BSP/Library/CMSIS/Device/Nuvoton/M480/Source/arm/M487.svd",
-      "preLaunchTask": "Build M487 Firmware"
+      "preLaunchTask": "Build M487 Firmware",
+      "device": "M487JIDAE",
+      "interface": "swd",
+      "toolchainPrefix": "arm-none-eabi",
+      "toolchainPath": "C:/Users/rinry/Tool/xpack-arm-none-eabi-gcc-15.2.1-1.1/bin"
     }
   ]
 }

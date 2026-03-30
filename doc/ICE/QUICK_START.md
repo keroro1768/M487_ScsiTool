@@ -163,6 +163,40 @@ D:\AiWorkSpace\M487_ScsiTool\tool\openocd\openocd.bat `
 
 ---
 
+## 4️⃣ GDB CLI Debug（指令列模式）
+
+**適用場景：** 不使用 VSCode，直接用 GDB 指令操作  
+**前置條件：** OpenOCD 已在 port 3333 執行
+
+### 快速測試腳本
+
+```powershell
+$GDB = "C:\Users\rinry\Tool\xpack-arm-none-eabi-gcc-15.2.1-1.1\bin\arm-none-eabi-gdb.exe"
+$ELF = "D:\AiWorkSpace\M487_ScsiTool\firmware\composite\build_gcc\firmware.elf"
+
+& $GDB --batch -ex "file $ELF" -ex "target remote localhost:3333" -ex "monitor reset halt" -ex "load" -ex "info registers" -ex "x/8x 0x20000000" -ex "detach"
+```
+
+### 完整 GDB 指令對照表
+
+| 指令 | 功能 | 說明 |
+|------|------|------|
+| `target remote localhost:3333` | 連線 | 連到 OpenOCD GDB Server |
+| `monitor reset halt` | 重置 | Reset + Halt MCU |
+| `load` | 燒錄 | 燒錄 ELF 到 Flash |
+| `file firmware.elf` | 載入符號表 | 載入 Debug 資訊 |
+| `info registers` | 顯示暫存器 | R0-R15, XPSR, MSP, PSP |
+| `x/16x 0x20000000` | 讀 SRAM | 顯示 16 個 word |
+| `x/16x 0x00000000` | 讀 Flash | 顯示 16 個 word |
+| `set {int}0x20000010 = 0xDEADBEEF` | 寫記憶體 | 寫入指定值 |
+| `break main` | 設斷點 | 在 main() 停下 |
+| `watch *0x20000010` | 設觀看點 | 記憶體被改時停下 |
+| `stepi` | 單步 | 執行一條指令 |
+| `continue` | 繼續執行 | 執行到下一個斷點 |
+| `detach` | 離開 | 結束 Debug Session |
+
+---
+
 ## ⚠️ 常見問題
 
 ### Q: `LIBUSB_ERROR_ACCESS`

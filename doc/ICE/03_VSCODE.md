@@ -1,7 +1,7 @@
 # VSCode Debug 整合設定
 
 > 日期：2026-03-30  
-> 狀態：✅ 已完成
+> 狀態：✅ 已完成（路徑已同步至 OpenOCD 整合版）
 
 ---
 
@@ -9,10 +9,11 @@
 
 | 檔案 | 路徑 |
 |------|------|
-| **launch.json** | `D:\AiWorkSpace\M487_ScsiTool\firmware\composite\.vscode\launch.json` |
-| **OpenOCD Config** | `D:\AiWorkSpace\M487_ScsiTool\tool\openocd\nulink_m487_ice.cfg` |
-| **OpenOCD Wrapper** | `D:\AiWorkSpace\M487_ScsiTool\tool\openocd\openocd.bat` |
-| **tasks.json** | `D:\AiWorkSpace\M487_ScsiTool\firmware\composite\.vscode\tasks.json` |
+| **launch.json** | `firmware\composite\.vscode\launch.json` |
+| **OpenOCD Config** | `tool\OpenOCD\nulink_m487_ice.cfg` |
+| **OpenOCD Wrapper** | `tool\OpenOCD\openocd.bat` |
+| **OpenOCD Binary** | `tool\OpenOCD\bin\openocd.exe` |
+| **tasks.json** | `firmware\composite\.vscode\tasks.json` |
 
 ---
 
@@ -22,25 +23,6 @@
 
 附加到已燒錄的晶片，適合線上除錯。
 
-```json
-{
-  "name": "Debug M487 (OpenOCD Attach)",
-  "type": "cortex-debug",
-  "request": "attach",
-  "servertype": "openocd",
-  "executable": "${workspaceFolder}/build/firmware.elf",
-  "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/openocd.bat",
-  "configFiles": [
-    "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/nulink_m487_ice.cfg"
-  ],
-  "overrideLaunchCommands": [
-    "monitor reset halt",
-    "load"
-  ],
-  "runToEntryPoint": "main"
-}
-```
-
 **流程：** 燒錄 → F5 → 停在 main
 
 ---
@@ -49,21 +31,6 @@
 
 直接啟動 Debug，不先燒錄。
 
-```json
-{
-  "name": "Debug M487 (OpenOCD Launch)",
-  "type": "cortex-debug",
-  "request": "launch",
-  "servertype": "openocd",
-  "executable": "${workspaceFolder}/build/firmware.elf",
-  "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/openocd.bat",
-  "configFiles": [
-    "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/nulink_m487_ice.cfg"
-  ],
-  "runToEntryPoint": "main"
-}
-```
-
 **流程：** F5 → 連線到現有韌體 → 停在 main
 
 ---
@@ -71,27 +38,6 @@
 ### 3. OpenOCD Flash & Debug — 燒錄 + Debug
 
 一次完成燒錄和除錯。
-
-```json
-{
-  "name": "OpenOCD Flash & Debug",
-  "type": "cortex-debug",
-  "request": "launch",
-  "servertype": "openocd",
-  "executable": "${workspaceFolder}/build/firmware.elf",
-  "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/openocd.bat",
-  "configFiles": [
-    "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/nulink_m487_ice.cfg"
-  ],
-  "overrideLaunchCommands": [
-    "monitor reset halt",
-    "flash write_image erase ${workspaceFolder}/build/firmware.bin 0",
-    "monitor reset halt",
-    "load"
-  ],
-  "runToEntryPoint": "main"
-}
-```
 
 **流程：** F5 → 自動燒錄 → 停在 main
 
@@ -102,9 +48,9 @@
 ### 第一次設定
 
 1. 確認 Nu-Link 已連接 USB
-2. 在 VSCode 開啟 `D:\AiWorkSpace\M487_ScsiTool\firmware\composite\`
+2. 在 VSCode 開啟 `firmware\composite\`
 3. 編譯：`Ctrl+Shift+B`
-4. 選擇 Debug 模式（見下圖）
+4. 選擇 Debug 模式（下拉選單）
 5. 按 **F5** 開始
 
 ### Debug 操作
@@ -138,7 +84,7 @@
 - [ ] Nu-Link USB 已插上
 - [ ] `openocd.bat` 路徑正確
 - [ ] `nulink_m487_ice.cfg` 存在
-- [ ] 韌體已編譯（`build/firmware.elf` 存在）
+- [ ] 韌體已編譯（`build_gcc\firmware.elf` 存在）
 
 ### Q: 停在 HardFault
 
@@ -154,7 +100,7 @@
 
 ---
 
-## 📝 完整 launch.json
+## 📝 完整 launch.json（2026-03-30 更新）
 
 ```json
 {
@@ -166,13 +112,13 @@
       "request": "attach",
       "servertype": "openocd",
       "cwd": "${workspaceFolder}",
-      "executable": "${workspaceFolder}/build/firmware.elf",
-      "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/openocd.bat",
+      "executable": "${workspaceFolder}/build_gcc/firmware.elf",
+      "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD/openocd.bat",
       "searchDir": [
-        "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/scripts"
+        "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD/scripts"
       ],
       "configFiles": [
-        "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/nulink_m487_ice.cfg"
+        "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD/nulink_m487_ice.cfg"
       ],
       "overrideLaunchCommands": [
         "monitor reset halt",
@@ -192,19 +138,21 @@
       "request": "launch",
       "servertype": "openocd",
       "cwd": "${workspaceFolder}",
-      "executable": "${workspaceFolder}/build/firmware.elf",
-      "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/openocd.bat",
+      "executable": "${workspaceFolder}/build_gcc/firmware.elf",
+      "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD/openocd.bat",
       "searchDir": [
-        "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/scripts"
+        "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD/scripts"
       ],
       "configFiles": [
-        "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/nulink_m487_ice.cfg"
+        "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD/nulink_m487_ice.cfg"
       ],
       "runToEntryPoint": "main",
       "svdFile": "D:/AiWorkSpace/KM/M480BSP/Library/CMSIS/Device/Nuvoton/M480/Source/arm/M487.svd",
       "preLaunchTask": "Build M487 Firmware",
       "device": "M487JIDAE",
-      "interface": "swd"
+      "interface": "swd",
+      "toolchainPrefix": "arm-none-eabi",
+      "toolchainPath": "C:/Users/rinry/Tool/xpack-arm-none-eabi-gcc-15.2.1-1.1/bin"
     },
     {
       "name": "OpenOCD Flash & Debug",
@@ -212,23 +160,27 @@
       "request": "launch",
       "servertype": "openocd",
       "cwd": "${workspaceFolder}",
-      "executable": "${workspaceFolder}/build/firmware.elf",
-      "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/openocd.bat",
+      "executable": "${workspaceFolder}/build_gcc/firmware.elf",
+      "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD/openocd.bat",
       "searchDir": [
-        "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/scripts"
+        "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD/scripts"
       ],
       "configFiles": [
-        "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/nulink_m487_ice.cfg"
+        "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD/nulink_m487_ice.cfg"
       ],
       "overrideLaunchCommands": [
         "monitor reset halt",
-        "flash write_image erase ${workspaceFolder}/build/firmware.bin 0",
+        "flash write_image erase ${workspaceFolder}/build_gcc/firmware.bin 0",
         "monitor reset halt",
         "load"
       ],
       "runToEntryPoint": "main",
       "svdFile": "D:/AiWorkSpace/KM/M480BSP/Library/CMSIS/Device/Nuvoton/M480/Source/arm/M487.svd",
-      "preLaunchTask": "Build M487 Firmware"
+      "preLaunchTask": "Build M487 Firmware",
+      "device": "M487JIDAE",
+      "interface": "swd",
+      "toolchainPrefix": "arm-none-eabi",
+      "toolchainPath": "C:/Users/rinry/Tool/xpack-arm-none-eabi-gcc-15.2.1-1.1/bin"
     }
   ]
 }
@@ -236,4 +188,16 @@
 
 ---
 
-*最後更新：2026-03-30 11:30*
+## 🔑 關鍵設定說明
+
+| 設定 | 值 | 說明 |
+|------|---|------|
+| `executable` | `build_gcc/firmware.elf` | GCC 輸出目錄 |
+| `serverpath` | `tool/OpenOCD/openocd.bat` | DLL wrapper（含 MSYS2 PATH）|
+| `searchDir` | `tool/OpenOCD/scripts` | OpenOCD TCL 指令集 |
+| `configFiles` | `tool/OpenOCD/nulink_m487_ice.cfg` | M487 + Nu-Link 設定檔 |
+| `toolchainPath` | `xpack-arm-none-eabi-gcc-15.2.1/bin` | ARM GCC 工具鏈 |
+
+---
+
+*最後更新：2026-03-30 16:44*
