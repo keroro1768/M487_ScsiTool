@@ -8,7 +8,7 @@
 
 | 資料夾 | 主題 | 文件數 |
 |--------|------|-------|
-| `ICE/` | 🔥 **M487 ICE 連線（最新）** | 5 |
+| `ICE/` | 🔥 **M487 ICE 連線（最新）** | 6 |
 | `HID-over-I2C/` | HID-over-I²C 橋接協定 | 7 |
 | `NuLink/` | Nu-Link 燒錄器使用經驗 | 1 |
 | `M487/` | M487 晶片使用方法 | 1 |
@@ -29,6 +29,7 @@
 
 | 文件 | 說明 |
 |------|------|
+| **[QUICK_START.md](ICE/QUICK_START.md)** | 🚀 **快速上手** — 新手必讀！燒錄 + Debug + 驗證 |
 | [00_INDEX.md](ICE/00_INDEX.md) | **文檔索引**，含所有文件連結 |
 | [01_PROBLEM.md](ICE/01_PROBLEM.md) | 問題分析：LIBUSB_ERROR_ACCESS、CMSIS-DAP vs NULINK Protocol |
 | [02_SOLUTION.md](ICE/02_SOLUTION.md) | 解決方案：成功配置與快速啟動指南 |
@@ -40,7 +41,7 @@
 - `tool/openocd/openocd.bat` — DLL 環境 wrapper
 - `firmware/composite/.vscode/launch.json` — VSCode Debug 設定
 
-**🚀 立即使用：** VSCode 中 F5 即可 Debug M487
+**🚀 立即使用：** VSCode 中 F5 即可 Debug M487，見 [快速上手指南](ICE/QUICK_START.md)
 
 ---
 
@@ -244,7 +245,8 @@ PC (USB HID Host) ←USB→ M487 Bridge ←I²C→ HID-over-I²C Device
 
 | 需求 | 前往 |
 |------|------|
-| **🚀 VSCode Debug M487（F5）** | [ICE/00_INDEX.md](ICE/00_INDEX.md) |
+| **🚀 第一次使用（新手上路）** | [ICE/QUICK_START.md](ICE/QUICK_START.md) |
+| **🚀 VSCode Debug M487（F5）** | [ICE/QUICK_START.md](ICE/QUICK_START.md) |
 | **🔧 ICE 連線問題解決** | [ICE/01_PROBLEM.md](ICE/01_PROBLEM.md) |
 | **🔌 HID-over-I²C 協定** | [HID-over-I2C/01-Spec/SPEC.md](HID-over-I2C/01-Spec/SPEC.md) |
 | **🔧 Nu-Link 驅動問題** | [NuLink/NuLink_Experience_Compilation.md](NuLink/NuLink_Experience_Compilation.md) |

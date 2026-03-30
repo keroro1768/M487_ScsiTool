@@ -9,25 +9,38 @@
 
 | 文件 | 說明 |
 |------|------|
+| **[QUICK_START.md](QUICK_START.md)** | 🚀 **快速上手** — 第一次使用看這篇（燒錄 + Debug + 驗證）|
 | **[01_PROBLEM.md](01_PROBLEM.md)** | 問題分析：LIBUSB_ERROR_ACCESS 根本原因 |
-| **[02_SOLUTION.md](03_SOLUTION.md)** | 解決方案：成功配置與快速啟動指南 |
-| **[03_CONFIG.md](03_SOLUTION.md)** | 詳細設定：各類設定檔解析 |
-| **[04_VERIFICATION.md](04_VERIFICATION.md)** | 驗證方法：連線測試與功能驗證 |
-| **[05_VSCODE.md](05_VSCODE.md)** | VSCode Debug 整合：launch.json 設定 |
+| **[02_SOLUTION.md](02_SOLUTION.md)** | 解決方案：成功配置與快速啟動指南 |
+| **[03_VSCODE.md](03_VSCODE.md)** | VSCode Debug 整合：launch.json 完整設定 |
+| **[04_VERIFICATION.md](04_VERIFICATION.md)** | 驗證方法：連線測試與預期輸出 |
 
 ---
 
-## 🎯 快速鏈接
+## 🎯 閱讀順序
 
-**🚀 立即使用：**
-- [快速啟動指令](03_SOLUTION.md#快速啟動)
-- [nulink_m487_ice.cfg](03_SOLUTION.md#nulink_m487_icecfg)
-- [VSCode F5 Debug](05_VSCODE.md)
+```
+第一次使用 → [QUICK_START.md] ← 快速燒錄、Debug、驗證
+需要原理 → [01_PROBLEM.md]   ← LIBUSB / CMSIS-DAP / NULINK Protocol
+需要設定 → [02_SOLUTION.md]  ← OpenOCD 設定檔 + 技術細節
+VSCode    → [03_VSCODE.md]   ← launch.json 設定
+驗證     → [04_VERIFICATION.md] ← 預期輸出 + 錯誤排除
+```
+
+---
+
+## 🚀 快速鏈接
+
+**🚀 立即燒錄 + Debug：**
+- [快速燒錄（CLI）](QUICK_START.md#1-燒錄韌體)
+- [VSCode F5 Debug](QUICK_START.md#2-debugvscode)
+- [驗證 ICE 連線](QUICK_START.md#3-驗證-ice-連線)
 
 **🔍 問題排查：**
-- [LIBUSB_ERROR_ACCESS 原因](01_PROBLEM.md#libusb_error_access)
+- [LIBUSB_ERROR_ACCESS](01_PROBLEM.md#libusb_error_access)
 - [CMSIS-DAP vs NULINK Protocol](01_PROBLEM.md#cmsis-dap-vs-nulink)
 - [OpenOCD Build 比較](01_PROBLEM.md#三個-openocd-build)
+- [常見問題](QUICK_START.md#️-常見問題)
 
 ---
 
@@ -51,7 +64,7 @@
 |-------|------|
 | `OpenOCD-Nuvoton\bin\openocd_cmsis-dap.exe` | NULINK HLA 指令未正確初始化 |
 | `Tool\openocd\OpenOCD-20260302-0.12.0\bin\openocd.exe` (sysprogs) | 無 NULINK layout |
-| `M487_ScsiTool\tool\openocd-build\bin\openocd.exe` (單獨) | 缺少 MSYS2 DLL |
+| `openocd-build\bin\openocd.exe` (無 MSYS2 PATH) | 缺少 MSYS2 DLL |
 
 ---
 
@@ -61,12 +74,12 @@
 D:\AiWorkSpace\M487_ScsiTool\
 └── doc\
     └── ICE\
-        ├── 00_INDEX.md          ← 本文件
+        ├── 00_INDEX.md           ← 本文件
+        ├── QUICK_START.md        ← 🚀 快速上手（新手起點）
         ├── 01_PROBLEM.md         ← 問題分析
-        ├── 02_SOLUTION.md        ← 解決方案（中文）
-        ├── 03_CONFIG.md          ← 詳細設定檔
-        ├── 04_VERIFICATION.md    ← 驗證方法
-        └── 05_VSCODE.md          ← VSCode 整合
+        ├── 02_SOLUTION.md        ← 解決方案
+        ├── 03_VSCODE.md         ← VSCode Debug 整合
+        └── 04_VERIFICATION.md    ← 驗證方法
 ```
 
 ---
@@ -79,4 +92,4 @@ D:\AiWorkSpace\M487_ScsiTool\
 
 ---
 
-*最後更新：2026-03-30 11:30*
+*最後更新：2026-03-30 11:41*
