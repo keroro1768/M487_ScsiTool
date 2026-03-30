@@ -50,29 +50,25 @@ def build_report_descriptor():
     return rdesc
 
 
-def pack_uhid_create(rdesc, name="fwupd-virtual-hid"):
-    """Pack UHID_CREATE ioctl data."""
-    # struct uhid_create_req {
-    #   __u8 name[128];
-    #   __u8 phys[64];
-    #   __u8 uniq[64];
-    #   __u8 rd_size;
-    #   __u8 rd[UHID_MAX_WRITE_SIZE]; // 64 bytes max
-    #   __u16 bus;
-    #   __u32 vendor;
-    #   __u32 product;
-    #   __u32 version;
-    #   __u32 country;
-    # }
+def pack_uhid_create(rdesc, name="fwupd-virtual-hid", bus=0, vendor=0x04F3, product=0x0732, version=1):
+    """Pack UHID_CREATE ioctl data.
+    
+    bus: 0=BUS_USB, 1=BUS_I2C, etc.
+    """
     name_bytes = name.encode('utf-8')[:127].ljust(128, b'\x00')
     phys_bytes = b'\x00' * 64
     uniq_bytes = b'\x00' * 64
     rdesc_size = len(rdesc)
     rdesc_padded = rdesc.ljust(UHID_MAX_WRITE_SIZE, b'\x00')
     
-    return struct.pack('=128s64s64sBBB',
-                       name_bytes, phys_bytes, uniq_bytes,
-                       rdesc_size, rdesc_size, 0) + rdesc_padded[:UHID_MAX_WRITE_SIZE]
+    # struct uhid_create_req layout (340 bytes total):
+    #   name[128]   phys[64]  uniq[64]  rd_size(1)  rd[64]  bus(2)  vendor(4)  product(4)  version(4)  country(4)
+    # Note: 2 bytes padding after 'bus' to align 'vendor' to 4-byte boundary
+    header = struct.pack('=128s64s64sB64sH2x III',
+                         name_bytes, phys_bytes, uniq_bytes,
+                         rdesc_size, rdesc_padded,
+                         bus, vendor, product, version, 0)
+    return header
 
 
 def pack_uhid_start():
@@ -82,11 +78,12 @@ def pack_uhid_start():
 
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description='Virtual HID device via uhid')
+    parser = argparse.ArgumentParser(description='Virtual HID device via uhid for FWUPD testing')
     parser.add_argument('--name', default='fwupd-virtual-hid', help='Device name')
-    parser.add_argument('--bus', type=int, default=0, help='Bus type (0=USB)')
-    parser.add_argument('--vendor', type=int, default=0x0000, help='Vendor ID')
-    parser.add_argument('--product', type=int, default=0x0000, help='Product ID')
+    parser.add_argument('--bus', type=int, default=0, help='Bus type (0=USB, 1=I2C, 2=SPI)')
+    parser.add_argument('--vendor', type=int, default=0x04F3, help='Vendor ID (default: 0x04F3)')
+    parser.add_argument('--product', type=int, default=0x0732, help='Product ID (default: 0x0732)')
+    parser.add_argument('--version', type=int, default=1, help='Device version')
     args = parser.parse_args()
     
     # Open uhid device
@@ -98,9 +95,9 @@ def main():
     print(f'[uhid] Report descriptor: {len(rdesc)} bytes')
     
     # Create device
-    create_data = pack_uhid_create(rdesc, args.name)
+    create_data = pack_uhid_create(rdesc, args.name, args.bus, args.vendor, args.product, args.version)
     os.write(uhid_fd, create_data)
-    print('[uhid] Device created')
+    print(f'[uhid] Device created: VID=0x{args.vendor:04X} PID=0x{args.product:04X}')
     
     # Event thread to read from uhid
     stop_event = threading.Event()
