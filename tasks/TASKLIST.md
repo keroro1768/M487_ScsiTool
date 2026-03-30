@@ -1,7 +1,7 @@
 ﻿# 任務清單 / Task List
 
-> 最後更新:2026-03-28
-> Review 日期:2026-03-28（全面重啟）
+> 最後更新:2026-03-30
+> Review 日期:2026-03-30（ICE 突破更新）
 > 政策:每 30 分鐘檢查進度,每個 Phase 完成後 Review
 
 ---
@@ -36,7 +36,7 @@
 
 ## T001 - USB 複合裝置(MSC + HID I2C 自訂格式)
 
-**狀態:** ⏳ Pending(待硬體)
+**狀態:** 🔄 進行中（ICE 已驗證，🔥 重大突破 2026-03-30）
 **起始:** 2026-03-26
 **Branch:** `firmware/composite-rewrite`
 **目標:** M487 USB 複合裝置(自訂 HID Report 格式)
@@ -44,11 +44,19 @@
 **進度:**
 - [x] 韌體架構設計
 - [x] GCC 編譯環境建立
-- [x] 韌體編譯(43.9KB)
-- [x] 燒錄成功
-- [ ] 實體測試(需回辦公室)
+- [x] 韌體編譯(61.2KB)
+- [x] **OpenOCD + Nu-Link ICE 燒錄驗證（2026-03-30）** 🔥
+- [x] **VSCode F5 Debug 驗證（2026-03-30）** 🔥
+- [ ] **燒錄後 USB 枚舉驗證（VID=0x04F3 PID=0x0732）**
+- [ ] MSC RAM Disk 功能驗證
+- [ ] HID I2C 通訊驗證
 - [ ] I2C Read 功能實作(I2C_Read 函式 stub)
-- [ ] Windows Tool 整合測試
+
+**ICE 突破（2026-03-30）：**
+- ✅ `openocd-build\bin\openocd.exe` + `hla driver` + `hla layout nulink`
+- ✅ `nulink_m487_ice.cfg` 已驗證
+- ✅ VSCode F5 Debug 可用
+- ✅ Reset halt / Breakpoints / Watchpoints 全部正常
 
 **位置:** `D:\AiWorkSpace\M487_ScsiTool\firmware\composite\`
 
@@ -68,13 +76,16 @@
 
 ## T003 - OpenOCD + Nu-Link 燒錄流程
 
-**狀態:** ✅ Finish
+**狀態:** ✅ Finish（已驗證，2026-03-30 更新）
 **起始:** 2026-03-26
 
 **進度:**
 - [x] OpenOCD 燒錄流程驗證
 - [x] flash.bat 腳本
 - [x] 速度:~6-13 KiB/s
+- [x] **OpenOCD 路徑/命令已更新為正確設定（2026-03-30）**
+
+**⚠️ 注意：** 正確的 OpenOCD 是 `tool/openocd-build/bin/openocd.exe`（而非 `OpenOCD-Nuvoton` 內的 binary），驅動是 `hla` 而非 `cmsis-dap`。詳見 `doc/ICE/`。
 
 ---
 
@@ -98,14 +109,20 @@
 
 ## T005 - OpenOCD + 除錯工具
 
-**狀態:** ✅ Finish
+**狀態:** ✅ Finish（2026-03-30 已驗證 VSCode F5 Debug 可用）
 **起始:** 2026-03-26
 
 **進度:**
 - [x] OpenOCD 使用指南文件
 - [x] 燒錄指令參考
 - [x] GDB 除錯整合
-- [ ] VSCode GDB launch 設定優化
+- [x] **VSCode GDB launch 設定（2026-03-30 已驗證 ✅）**
+
+**VSCode Debug 狀態（2026-03-30 驗證）：**
+- ✅ `launch.json` 更新為 `openocd.bat` + `nulink_m487_ice.cfg`
+- ✅ 3 種 Debug 模式皆可用（Attach / Launch / Flash & Debug）
+- ✅ Reset halt / breakpoints / watchpoints 正常
+- ✅ 詳見 `doc/ICE/QUICK_START.md`
 
 **位置:** `T005\`
 
@@ -184,10 +201,11 @@
 
 ## T010 - T001 實體測試
 
-**狀態:** ⏳ Pending(待硬體)
-**相依於:** 回到辦公室
+**狀態:** 🔄 可執行（ICE Debug 可現在執行，USB 實體需回辦公室）
+**相依於:** 回到辦公室（實體 USB）
 
 **進度:**
+- [ ] OpenOCD Debug 燒錄驗證（現在可執行 ✅ ICE 已就緒）
 - [ ] 插上 M487 USB Device 纜線
 - [ ] 確認 VID=0x04F3 PID=0x0732 出現
 - [ ] 測試 MSC RAM Disk
@@ -963,12 +981,12 @@ py itm_trace_viewer.py --list-ports
 | L2 | hidtool (T029) | P1 | ✅ Finish | 整合 MSC + HID Debug |
 | L3 | USB Filter Driver (T027) 含 T027a-h | P1 | ⏳ Pending | Windows Kernel-mode driver,需 WDK |
 | L3 | GDB RSP Server (T033) | P2 | ✅ Framework | 軟體 ICE,MSC 承載 |
+| **L3** | **ICE + GDB (T001)** | **P0** | **🔥 已驗證可用** | **Nu-Link + OpenOCD SWD Debug ✅** |
 | L4 | ITM/SWO (T024) | P0 | ✅ Finish | 零額外成本,需 debug header |
 | L4 | ITM Viewer (T030) | P2 | ✅ Finish | PC 端 SWO trace |
 | L4 | DWT Debug (T034) | P2 | ✅ Framework | 硬體 breakpoint/watchpoint |
 | L4 | Flash Error Log (T031) | P2 | ✅ Finish | 錯誤持久化,出廠後可讀取 |
 | L4 | Self-Test Mode (T032) | P2 | ✅ Finish | 開機自我檢測 |
-| L5 | ICE + GDB | N/A | 現有 | Nu-Link2,需退修 |
 | L5 | USBPcap + Wireshark (T035) | P3 | ⏳ Reference | 離線協定分析,參考工具 |
 
 ---
@@ -977,7 +995,7 @@ py itm_trace_viewer.py --list-ports
 
 | 任務 | 狀態 | 優先 |
 |------|------|------|
-| T001 | ⏳ Pending(待硬體)| - |
+| T001 | 🔄 進行中(ICE 已突破) | 🔥 |
 | T002 | ✅ Finish | - |
 | T003 | ✅ Finish | - |
 | T004 | ✅ Finish | - |
@@ -986,7 +1004,7 @@ py itm_trace_viewer.py --list-ports
 | T007 | ⏳ Pending | - |
 | T008 | ✅ Finish | - |
 | T009 | ✅ N/A | - |
-| T010 | ⏳ Pending(待硬體)| - |
+| T010 | 🔄 ICE Debug 可用 | - |
 | T011 | ✅ Finish | - |
 | **T012** | ✅ Review 完成 | - |
 | **T014** | ✅ Finish | **P0** |

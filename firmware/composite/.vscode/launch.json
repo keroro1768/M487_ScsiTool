@@ -1,4 +1,4 @@
-{
+﻿{
   "version": "0.2.0",
   "configurations": [
     {
@@ -8,7 +8,7 @@
       "servertype": "openocd",
       "cwd": "${workspaceFolder}",
       "executable": "${workspaceFolder}/build/firmware.elf",
-      "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/openocd.bat",
+      "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD/openocd.bat",
       "searchDir": [
         "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/scripts"
       ],
@@ -34,7 +34,7 @@
       "servertype": "openocd",
       "cwd": "${workspaceFolder}",
       "executable": "${workspaceFolder}/build/firmware.elf",
-      "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/openocd.bat",
+      "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD/openocd.bat",
       "searchDir": [
         "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/scripts"
       ],
@@ -54,7 +54,7 @@
       "servertype": "openocd",
       "cwd": "${workspaceFolder}",
       "executable": "${workspaceFolder}/build/firmware.elf",
-      "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/openocd.bat",
+      "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD/openocd.bat",
       "searchDir": [
         "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/scripts"
       ],
