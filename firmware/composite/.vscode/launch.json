@@ -8,12 +8,12 @@
       "servertype": "openocd",
       "cwd": "${workspaceFolder}",
       "executable": "${workspaceFolder}/build/firmware.elf",
-      "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/bin/openocd_cmsis-dap.exe",
+      "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/openocd.bat",
       "searchDir": [
         "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/scripts"
       ],
       "configFiles": [
-        "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/m487_cmsis_dap.cfg"
+        "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/nulink_m487_ice.cfg"
       ],
       "overrideLaunchCommands": [
         "monitor reset halt",
@@ -34,12 +34,12 @@
       "servertype": "openocd",
       "cwd": "${workspaceFolder}",
       "executable": "${workspaceFolder}/build/firmware.elf",
-      "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/bin/openocd_cmsis-dap.exe",
+      "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/openocd.bat",
       "searchDir": [
         "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/scripts"
       ],
       "configFiles": [
-        "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/m487_cmsis_dap.cfg"
+        "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/nulink_m487_ice.cfg"
       ],
       "runToEntryPoint": "main",
       "svdFile": "D:/AiWorkSpace/KM/M480BSP/Library/CMSIS/Device/Nuvoton/M480/Source/arm/M487.svd",
@@ -54,12 +54,12 @@
       "servertype": "openocd",
       "cwd": "${workspaceFolder}",
       "executable": "${workspaceFolder}/build/firmware.elf",
-      "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/bin/openocd_cmsis-dap.exe",
+      "serverpath": "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/openocd.bat",
       "searchDir": [
         "D:/AiWorkSpace/M487_ScsiTool/tool/OpenOCD-Nuvoton/OpenOCD/scripts"
       ],
       "configFiles": [
-        "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/m487_cmsis_dap.cfg"
+        "D:/AiWorkSpace/M487_ScsiTool/tool/openocd/nulink_m487_ice.cfg"
       ],
       "overrideLaunchCommands": [
         "monitor reset halt",
