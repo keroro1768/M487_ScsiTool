@@ -1,0 +1,7 @@
+# Sample Code — 這些資料夾太過龐大且路徑過長，無法由 Git 管理
+# 請保留在本地磁碟，作為外部參考資料
+Library/
+Projects/
+USB_HS_Samples/
+Nu-Link2-Bridge_Firmware/
+Reference/UnitTest/

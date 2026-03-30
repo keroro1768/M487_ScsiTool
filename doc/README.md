@@ -8,6 +8,7 @@
 
 | 資料夾 | 主題 | 文件數 |
 |--------|------|-------|
+| **`Samples/`** | 🔥 **範例程式碼 ＋ How-To ＋ 參考資料（整理）** | 8+ |
 | `ICE/` | 🔥 **M487 ICE 連線（最新）** | 6 |
 | `HID-over-I2C/` | HID-over-I²C 橋接協定 | 7 |
 | `NuLink/` | Nu-Link 燒錄器使用經驗 | 1 |
@@ -20,6 +21,30 @@
 | `GDB_RSP/` | GDB RSP 研究 | 1 |
 | `design/UI-UX-Design/` | UI/UX 設計文件 | 5 |
 | `USB_Driver_Samples/` | USB Driver Samples 研究 | 1 |
+
+---
+
+## 🔥 Samples/ — 範例程式碼 ＋ 參考資料
+
+**主題：** Nuvoton 官方範例程式碼、How-To 操作指南、參考工具
+
+| 子資料夾 | 說明 |
+|---------|------|
+| `Projects/` | 🔥 Nuvoton 官方範例（57+ 專案，含 MSC/HID/VENDOR_LBK）|
+| `Library/` | CMSIS / Device / StdDriver / UsbHostLib |
+| `USB_HS_Samples/` | USB HS 範例集合 |
+| `Nu-Link2-Bridge_Firmware/` | Nu-Link2 橋接韌體 |
+| `HowTo/` | 8 篇操作指南（環境設定/OpenOCD/燒錄/驅動）|
+| `Reference/` | Flash 備份、OpenOCD TCL 腳本、單元測試 |
+
+**關鍵範例：**
+- `Projects/HSUSBD_VENDOR_LBK/` — **最重要參考**（USB VENDOR Command + MSC Debug Channel）
+- `Projects/USB_HS_Samples/USBD_Mass_Storage_Flash/` — MSC + SPI Flash
+- `Projects/USB_HS_Samples/USBD_HID_Transfer/` — HID Transfer
+
+**🚀 立即使用：** `Projects/HSUSBD_VENDOR_LBK/` 可直接複製修改作為本專案基底
+
+**📖 索引文件：** [doc/Samples/00_INDEX.md](Samples/00_INDEX.md)
 
 ---
 
