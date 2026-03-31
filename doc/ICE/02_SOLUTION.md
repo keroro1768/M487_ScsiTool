@@ -1,6 +1,6 @@
 # M487 ICE 連線解決方案
 
-> 日期：2026-03-30  
+> 日期：2026-03-31（更新）  
 > 狀態：✅ 完全成功
 
 ---
@@ -64,15 +64,19 @@ target create M487.cpu cortex_m -dap M487.dap
 adapter speed 4000
 ```
 
+> ⚠️ **陣阱：** `hla layout nulink` 這行是關鍵。若被註解掉或遺失，OpenOCD 將無法認識 Nu-Link，導致燒錄失敗而且不一定會顯示明顯錯誤訊息。
+
 ### 4. Wrapper Script（含 DLL PATH）
 
 **位置：** `D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\openocd.bat`
 
 ```bat
 @echo off
-set PATH=%~dp0..\OpenOCD;C:\msys64\mingw64\bin;%PATH%
-"%~dp0..\OpenOCD\bin\openocd.exe" %*
+set PATH=%~dp0bin;C:\msys64\mingw64\bin;%PATH%
+"%~dp0bin\openocd.exe" %*
 ```
+
+> ⚠️ **說明：** 此 wrapper 自動將 `tool\OpenOCD\bin\` 和 `C:\msys64\mingw64\bin` 加入 PATH，解決 MSYS2 DLL 依賴問題。**必須透過此檔執行 OpenOCD，勿直接呼叫 `openocd.exe`。**
 
 ---
 
@@ -82,13 +86,13 @@ set PATH=%~dp0..\OpenOCD;C:\msys64\mingw64\bin;%PATH%
 
 ```powershell
 # 測試連線
-D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\openocd.bat -c "init" -c "targets" -c "shutdown"
+D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\openocd.bat -f D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\nulink_m487_ice.cfg -c "init" -c "targets" -c "shutdown"
 
 # 啟動 GDB Server
-D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\openocd.bat
+D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\openocd.bat -f D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\nulink_m487_ice.cfg
 
-# 完整燒錄 + 啟動
-D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\openocd.bat -s D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\scripts -f D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\nulink_m487_ice.cfg
+# Reset + Halt
+D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\openocd.bat -f D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\nulink_m487_ice.cfg -c "init" -c "reset halt" -c "shutdown"
 ```
 
 ### 方法二：VSCode F5（最方便）
@@ -106,8 +110,10 @@ D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\openocd.bat -s D:\AiWorkSpace\M487_Scs
 
 ```powershell
 cd D:\AiWorkSpace\M487_ScsiTool\firmware\composite\build_gcc
-D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\openocd.bat -s D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\scripts -f D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\nulink_m487_ice.cfg -c "init" -c "reset halt" -c "flash write_image erase firmware.bin 0" -c "shutdown"
+D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\openocd.bat -f D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\nulink_m487_ice.cfg -c "init" -c "reset halt" -c "flash write_image erase firmware.bin 0" -c "shutdown"
 ```
+
+> ⚠️ **陷阱：** 務必確認 `-f` 指向 `D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\nulink_m487_ice.cfg`，若路徑錯誤會導致 OpenOCD 找不到設定檔而無法啟動。
 
 ### 方法二：VSCode（推薦）
 
@@ -168,10 +174,11 @@ $ELF = "D:\AiWorkSpace\M487_ScsiTool\firmware\composite\build_gcc\firmware.elf"
 
 ## ⚠️ 重要提醒
 
-1. **使用 `tool\OpenOCD\`（整合版）**，不是 `tool\openocd\`（舊版）
+1. **使用 `tool\OpenOCD\`（整合版）**，不是 `tool\openocd\`（舊版，已廢棄）
 2. **務必透過 `openocd.bat` 執行**，自動設定 MSYS2 DLL PATH
 3. **不要使用 Nuvoton 內建的 `numicroM4.cfg`** — 該檔案使用舊版 OpenOCD 語法，會導致 hang
 4. **GDB 必須先 `file firmware.elf`** 才能正確解析符號，否則顯示 `??`
+5. **`hla layout nulink` 絕對不能遺失** — 若遺失此行，燒錄會骙默失敗，且沒有明顯錯誤提示
 
 ---
 
@@ -192,4 +199,4 @@ D:\AiWorkSpace\M487_ScsiTool\tool\
 
 ---
 
-*最後更新：2026-03-30 16:44*
+*最後更新：2026-03-31 10:54*

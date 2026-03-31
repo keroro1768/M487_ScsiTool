@@ -1,6 +1,7 @@
 # 驗證方法
 
-> 日期：2026-03-30
+> 日期：2026-03-31（更新）  
+> 狀態：✅ 驗證通過
 
 ---
 
@@ -9,7 +10,7 @@
 ### 基本連線測試
 
 ```powershell
-D:\AiWorkSpace\M487_ScsiTool\tool\openocd\openocd.bat -c "init" -c "targets" -c "shutdown"
+D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\openocd.bat -f D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\nulink_m487_ice.cfg -c "init" -c "targets" -c "shutdown"
 ```
 
 **預期輸出：**
@@ -29,7 +30,7 @@ shutdown command invoked
 ### Reset Halt 測試
 
 ```powershell
-D:\AiWorkSpace\M487_ScsiTool\tool\openocd\openocd.bat -c "init" -c "reset halt" -c "targets" -c "shutdown"
+D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\openocd.bat -f D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\nulink_m487_ice.cfg -c "init" -c "reset halt" -c "targets" -c "shutdown"
 ```
 
 **預期輸出：**
@@ -41,7 +42,7 @@ xPSR: 0x01000000 pc: 0x100028f0 msp: 0x20020000
 ### 寄存器讀取測試
 
 ```powershell
-D:\AiWorkSpace\M487_ScsiTool\tool\openocd\openocd.bat -c "init" -c "reset halt" -c "reg pc" -c "reg xpsr" -c "shutdown"
+D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\openocd.bat -f D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\nulink_m487_ice.cfg -c "init" -c "reset halt" -c "reg pc" -c "reg xpsr" -c "shutdown"
 ```
 
 **預期輸出：**
@@ -85,8 +86,7 @@ mdw 0x20000000 10
 
 **前置條件：** OpenOCD 必須先啟動
 ```powershell
-cd D:\AiWorkSpace\M487_ScsiTool\firmware\composite\build_gcc
-..\..\..\tool\OpenOCD\openocd.bat -s D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\scripts -f nulink_m487_ice.cfg
+D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\openocd.bat -f D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\nulink_m487_ice.cfg
 ```
 
 **GDB 連線測試（批次模式）：**
@@ -145,12 +145,13 @@ Info : [M487.cpu] target has 6 breakpoints, 4 watchpoints    ← Debug 資源確
 
 | 輸出 | 原因 | 解決 |
 |------|------|------|
-| `LIBUSB_ERROR_ACCESS` | DLL 缺失或權限不足 | 設定 MSYS2 PATH |
-| `No adapter layout 'nulink'` | 使用錯誤的 OpenOCD build | 換用 openocd-build |
+| `LIBUSB_ERROR_ACCESS` | DLL 缺失或權限不足 | 透過 `openocd.bat` 執行（自動設定 MSYS2 PATH）|
+| `No adapter layout 'nulink'` | 使用錯誤的 OpenOCD build | 換用 `tool\OpenOCD\bin\openocd.exe` |
 | `CMSIS-DAP command CMD_INFO failed` | 用了錯誤的 driver | 用 `hla` 不是 `cmsis-dap` |
-| `BUG: current_target out of bounds` | 沒有建立 target | 確認 nulink_m487_ice.cfg 正確 |
+| `BUG: current_target out of bounds` | cfg 內 target 未建立 | 確認 `nulink_m487_ice.cfg` 有完整 target create |
 | `invalid command name "swd newdap"` | 語法錯誤 | 確認 OpenOCD 0.12 語法 |
+| 連線成功但燒錄失敗 | cfg 遺失 `hla layout nulink` | 確認 cfg 第二行有 `hla layout nulink` |
 
 ---
 
-*最後更新：2026-03-30 11:30*
+*最後更新：2026-03-31 10:54*

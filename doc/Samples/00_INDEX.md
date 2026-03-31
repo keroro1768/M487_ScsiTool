@@ -88,6 +88,7 @@ doc/Samples/
 | `06_TROUBLESHOOTING.md` | 燒錄/除錯疑難排解 |
 | `07_MEMORY_MAP.md` | M487 記憶體對照表 |
 | `08_GITHUB_REPOS.md` | Nuvoton GitHub Repo 整理 |
+| `09_GCC_BUILD_NOTES.md` | GCC 編譯範例注意事項（⚠️ Linker Script 陷阱）|
 
 > ⚠️ `02_OPENOCD_FLASH.md` 中的 OpenOCD 路徑/命令可能已過時，請以 `doc/ICE/QUICK_START.md` 為準。
 

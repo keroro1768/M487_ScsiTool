@@ -57,8 +57,10 @@ VSCode     → [03_VSCODE.md]   ← launch.json 設定
 | 項目 | 值 |
 |------|---|
 | **OpenOCD Build** | `tool\OpenOCD\bin\openocd.exe` (0.12.0+dev 2026-03-25) |
+| **Config File** | `tool\OpenOCD\nulink_m487_ice.cfg` |
 | **Driver** | `hla` (HLA, not CMSIS-DAP) |
 | **Protocol** | Proprietary HID（第一代 Nu-Link 非標準 CMSIS-DAP）|
+| **關鍵設定** | `hla layout nulink`（⚠️ 不可遺失，否則燒錄失敗）|
 | **M487 IDCODE** | `0x2BA01477` |
 | **Speed** | 4MHz SWD |
 | **Breakpoints** | 6 個（硬體）|
@@ -103,4 +105,4 @@ doc\
 
 ---
 
-*最後更新：2026-03-30 16:44*
+*最後更新：2026-03-31 10:54*

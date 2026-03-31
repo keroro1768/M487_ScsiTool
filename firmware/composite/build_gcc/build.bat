@@ -1,0 +1,60 @@
+@echo off
+:: Build firmware using xpack GCC with corrected linker script
+
+set SRC_DIR=D:\AiWorkSpace\M487_ScsiTool\firmware\composite
+set BUILD_DIR=%SRC_DIR%\build_gcc
+set BSP_DIR=D:\AiWorkSpace\KM\M480BSP
+set XPKG_ROOT=C:\Users\rinry\Tool\xpack-arm-none-eabi-gcc-15.2.1-1.1
+
+set CC=%XPKG_ROOT%\bin\arm-none-eabi-gcc.exe
+set OBJCOPY=%XPKG_ROOT%\bin\arm-none-eabi-objcopy.exe
+set SIZE=%XPKG_ROOT%\bin\arm-none-eabi-size.exe
+
+set LDSCRIPT=%SRC_DIR%\gcc_arm_aprom.ld
+
+:: Clean
+del /q "%BUILD_DIR%\*.o" "%BUILD_DIR%\*.elf" "%BUILD_DIR%\firmware.*" 2>nul
+
+:: Compile project sources
+echo Compiling project sources...
+%CC% -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -Wall -fdata-sections -ffunction-sections -fno-strict-aliasing -DUSE_HXTAL=12000000 -D__ARM_ARCH_7M__=1 -ID:\AiWorkSpace\KM\M480BSP\Library\CMSIS\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Source -ID:\AiWorkSpace\KM\M480BSP\Library\StdDriver\inc -I%SRC_DIR% -I%SRC_DIR%\dwt -c %SRC_DIR%\main.c -o %BUILD_DIR%\main.o
+%CC% -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -Wall -fdata-sections -ffunction-sections -fno-strict-aliasing -DUSE_HXTAL=12000000 -D__ARM_ARCH_7M__=1 -ID:\AiWorkSpace\KM\M480BSP\Library\CMSIS\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Source -ID:\AiWorkSpace\KM\M480BSP\Library\StdDriver\inc -I%SRC_DIR% -I%SRC_DIR%\dwt -c %SRC_DIR%\hid_i2c.c -o %BUILD_DIR%\hid_i2c.o
+%CC% -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -Wall -fdata-sections -ffunction-sections -fno-strict-aliasing -DUSE_HXTAL=12000000 -D__ARM_ARCH_7M__=1 -ID:\AiWorkSpace\KM\M480BSP\Library\CMSIS\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Source -ID:\AiWorkSpace\KM\M480BSP\Library\StdDriver\inc -I%SRC_DIR% -I%SRC_DIR%\dwt -c %SRC_DIR%\i2c_control.c -o %BUILD_DIR%\i2c_control.o
+%CC% -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -Wall -fdata-sections -ffunction-sections -fno-strict-aliasing -DUSE_HXTAL=12000000 -D__ARM_ARCH_7M__=1 -ID:\AiWorkSpace\KM\M480BSP\Library\CMSIS\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Source -ID:\AiWorkSpace\KM\M480BSP\Library\StdDriver\inc -I%SRC_DIR% -I%SRC_DIR%\dwt -c %SRC_DIR%\usb_descriptors.c -o %BUILD_DIR%\usb_descriptors.o
+%CC% -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -Wall -fdata-sections -ffunction-sections -fno-strict-aliasing -DUSE_HXTAL=12000000 -D__ARM_ARCH_7M__=1 -ID:\AiWorkSpace\KM\M480BSP\Library\CMSIS\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Source -ID:\AiWorkSpace\KM\M480BSP\Library\StdDriver\inc -I%SRC_DIR% -I%SRC_DIR%\dwt -c %SRC_DIR%\itm.c -o %BUILD_DIR%\itm.o
+%CC% -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -Wall -fdata-sections -ffunction-sections -fno-strict-aliasing -DUSE_HXTAL=12000000 -D__ARM_ARCH_7M__=1 -ID:\AiWorkSpace\KM\M480BSP\Library\CMSIS\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Source -ID:\AiWorkSpace\KM\M480BSP\Library\StdDriver\inc -I%SRC_DIR% -I%SRC_DIR%\dwt -c %SRC_DIR%\msc_debug.c -o %BUILD_DIR%\msc_debug.o
+%CC% -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -Wall -fdata-sections -ffunction-sections -fno-strict-aliasing -DUSE_HXTAL=12000000 -D__ARM_ARCH_7M__=1 -ID:\AiWorkSpace\KM\M480BSP\Library\CMSIS\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Source -ID:\AiWorkSpace\KM\M480BSP\Library\StdDriver\inc -I%SRC_DIR% -I%SRC_DIR%\dwt -c %SRC_DIR%\uart_debug.c -o %BUILD_DIR%\uart_debug.o
+%CC% -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -Wall -fdata-sections -ffunction-sections -fno-strict-aliasing -DUSE_HXTAL=12000000 -D__ARM_ARCH_7M__=1 -ID:\AiWorkSpace\KM\M480BSP\Library\CMSIS\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Source -ID:\AiWorkSpace\KM\M480BSP\Library\StdDriver\inc -I%SRC_DIR% -I%SRC_DIR%\dwt -c %SRC_DIR%\flash_error.c -o %BUILD_DIR%\flash_error.o
+%CC% -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -Wall -fdata-sections -ffunction-sections -fno-strict-aliasing -DUSE_HXTAL=12000000 -D__ARM_ARCH_7M__=1 -ID:\AiWorkSpace\KM\M480BSP\Library\CMSIS\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Source -ID:\AiWorkSpace\KM\M480BSP\Library\StdDriver\inc -I%SRC_DIR% -I%SRC_DIR%\dwt -c %SRC_DIR%\dwt\dwt.c -o %BUILD_DIR%\dwt.o
+%CC% -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -Wall -fdata-sections -ffunction-sections -fno-strict-aliasing -DUSE_HXTAL=12000000 -D__ARM_ARCH_7M__=1 -ID:\AiWorkSpace\KM\M480BSP\Library\CMSIS\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Source -ID:\AiWorkSpace\KM\M480BSP\Library\StdDriver\inc -I%SRC_DIR% -I%SRC_DIR%\dwt -c %SRC_DIR%\self_test.c -o %BUILD_DIR%\self_test.o
+
+:: Compile BSP sources
+echo Compiling BSP sources...
+%CC% -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -Wall -fdata-sections -ffunction-sections -fno-strict-aliasing -DUSE_HXTAL=12000000 -D__ARM_ARCH_7M__=1 -ID:\AiWorkSpace\KM\M480BSP\Library\CMSIS\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Source -ID:\AiWorkSpace\KM\M480BSP\Library\StdDriver\inc -I%SRC_DIR% -c %BSP_DIR%\Library\Device\Nuvoton\M480\Source\system_M480.c -o %BUILD_DIR%\system_M480.o
+%CC% -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -Wall -fdata-sections -ffunction-sections -fno-strict-aliasing -DUSE_HXTAL=12000000 -D__ARM_ARCH_7M__=1 -ID:\AiWorkSpace\KM\M480BSP\Library\CMSIS\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Source -ID:\AiWorkSpace\KM\M480BSP\Library\StdDriver\inc -I%SRC_DIR% -c %BSP_DIR%\Library\StdDriver\src\hsusbd.c -o %BUILD_DIR%\hsusbd.o
+%CC% -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -Wall -fdata-sections -ffunction-sections -fno-strict-aliasing -DUSE_HXTAL=12000000 -D__ARM_ARCH_7M__=1 -ID:\AiWorkSpace\KM\M480BSP\Library\CMSIS\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Source -ID:\AiWorkSpace\KM\M480BSP\Library\StdDriver\inc -I%SRC_DIR% -c %BSP_DIR%\Library\StdDriver\src\clk.c -o %BUILD_DIR%\clk.o
+%CC% -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -Wall -fdata-sections -ffunction-sections -fno-strict-aliasing -DUSE_HXTAL=12000000 -D__ARM_ARCH_7M__=1 -ID:\AiWorkSpace\KM\M480BSP\Library\CMSIS\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Source -ID:\AiWorkSpace\KM\M480BSP\Library\StdDriver\inc -I%SRC_DIR% -c %BSP_DIR%\Library\StdDriver\src\gpio.c -o %BUILD_DIR%\gpio.o
+%CC% -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -Wall -fdata-sections -ffunction-sections -fno-strict-aliasing -DUSE_HXTAL=12000000 -D__ARM_ARCH_7M__=1 -ID:\AiWorkSpace\KM\M480BSP\Library\CMSIS\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Source -ID:\AiWorkSpace\KM\M480BSP\Library\StdDriver\inc -I%SRC_DIR% -c %BSP_DIR%\Library\StdDriver\src\sys.c -o %BUILD_DIR%\sys.o
+%CC% -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -Wall -fdata-sections -ffunction-sections -fno-strict-aliasing -DUSE_HXTAL=12000000 -D__ARM_ARCH_7M__=1 -ID:\AiWorkSpace\KM\M480BSP\Library\CMSIS\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Source -ID:\AiWorkSpace\KM\M480BSP\Library\StdDriver\inc -I%SRC_DIR% -c %BSP_DIR%\Library\StdDriver\src\pdma.c -o %BUILD_DIR%\pdma.o
+%CC% -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -Wall -fdata-sections -ffunction-sections -fno-strict-aliasing -DUSE_HXTAL=12000000 -D__ARM_ARCH_7M__=1 -ID:\AiWorkSpace\KM\M480BSP\Library\CMSIS\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Source -ID:\AiWorkSpace\KM\M480BSP\Library\StdDriver\inc -I%SRC_DIR% -c %BSP_DIR%\Library\StdDriver\src\fmc.c -o %BUILD_DIR%\fmc.o
+%CC% -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -Wall -fdata-sections -ffunction-sections -fno-strict-aliasing -DUSE_HXTAL=12000000 -D__ARM_ARCH_7M__=1 -ID:\AiWorkSpace\KM\M480BSP\Library\CMSIS\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Source -ID:\AiWorkSpace\KM\M480BSP\Library\StdDriver\inc -I%SRC_DIR% -c %BSP_DIR%\Library\StdDriver\src\usbd.c -o %BUILD_DIR%\usbd.o
+%CC% -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -Wall -fdata-sections -ffunction-sections -fno-strict-aliasing -DUSE_HXTAL=12000000 -D__ARM_ARCH_7M__=1 -ID:\AiWorkSpace\KM\M480BSP\Library\CMSIS\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Source -ID:\AiWorkSpace\KM\M480BSP\Library\StdDriver\inc -I%SRC_DIR% -c %BSP_DIR%\Library\StdDriver\src\retarget.c -o %BUILD_DIR%\retarget.o
+%CC% -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -Wall -fdata-sections -ffunction-sections -fno-strict-aliasing -DUSE_HXTAL=12000000 -D__ARM_ARCH_7M__=1 -ID:\AiWorkSpace\KM\M480BSP\Library\CMSIS\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Source -ID:\AiWorkSpace\KM\M480BSP\Library\StdDriver\inc -I%SRC_DIR% -c %BSP_DIR%\Library\StdDriver\src\uart.c -o %BUILD_DIR%\uart.o
+%CC% -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -Wall -fdata-sections -ffunction-sections -fno-strict-aliasing -DUSE_HXTAL=12000000 -D__ARM_ARCH_7M__=1 -ID:\AiWorkSpace\KM\M480BSP\Library\CMSIS\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Source -ID:\AiWorkSpace\KM\M480BSP\Library\StdDriver\inc -I%SRC_DIR% -c %BSP_DIR%\Library\StdDriver\src\usci_i2c.c -o %BUILD_DIR%\usci_i2c.o
+
+:: Compile startup
+echo Compiling startup...
+%CC% -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -D__ASSEMBLY__ -D__ARM_ARCH_7M__=1 -ID:\AiWorkSpace\KM\M480BSP\Library\CMSIS\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Include -ID:\AiWorkSpace\KM\M480BSP\Library\Device\Nuvoton\M480\Source -c %BSP_DIR%\Library\Device\Nuvoton\M480\Source\GCC\startup_M480.S -o %BUILD_DIR%\startup_M480.o
+
+:: Link
+echo Linking...
+%CC% -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -T%LDSCRIPT% -Wl,--gc-sections -Wl,-Map=%BUILD_DIR%\firmware.map %BUILD_DIR%\main.o %BUILD_DIR%\hid_i2c.o %BUILD_DIR%\i2c_control.o %BUILD_DIR%\usb_descriptors.o %BUILD_DIR%\itm.o %BUILD_DIR%\msc_debug.o %BUILD_DIR%\uart_debug.o %BUILD_DIR%\flash_error.o %BUILD_DIR%\dwt.o %BUILD_DIR%\self_test.o %BUILD_DIR%\system_M480.o %BUILD_DIR%\hsusbd.o %BUILD_DIR%\clk.o %BUILD_DIR%\gpio.o %BUILD_DIR%\sys.o %BUILD_DIR%\pdma.o %BUILD_DIR%\fmc.o %BUILD_DIR%\usbd.o %BUILD_DIR%\retarget.o %BUILD_DIR%\uart.o %BUILD_DIR%\usci_i2c.o %BUILD_DIR%\startup_M480.o -o %BUILD_DIR%\firmware.elf
+
+:: Create binary
+echo Creating binary...
+%OBJCOPY% -O binary %BUILD_DIR%\firmware.elf %BUILD_DIR%\firmware.bin
+
+:: Show size
+%SIZE% %BUILD_DIR%\firmware.elf
+
+echo Done!

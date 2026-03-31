@@ -1,8 +1,8 @@
 # M487 ICE 快速上手指南
 
 > 適用對象：第一次使用 M487 + Nu-Link + OpenOCD  
-> 整理時間：2026-03-30  
-> 前置條件：Nu-Link 已連接 USB、Windows 已安裝驅動
+> 整理時間：2026-03-31（更新）  
+> 前置條件： Nu-Link 已連接 USB、Windows 已安裝驅動
 
 ---
 
@@ -31,7 +31,7 @@ USB\VID_0416&PID_511C&MI_01\...  Status: OK  (WinUSB ✅)
 ### 確認 OpenOCD 可執行
 
 ```powershell
-D:\AiWorkSpace\M487_ScsiTool\tool\openocd\openocd.bat -c "adapter list"
+D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\openocd.bat -f D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\nulink_m487_ice.cfg -c "adapter list"
 ```
 
 預期：看見 `hla { jtag swd }` 在清單中。
@@ -50,15 +50,13 @@ D:\AiWorkSpace\M487_ScsiTool\tool\openocd\openocd.bat -c "adapter list"
 ### 方法二：CLI 燒錄
 
 ```powershell
-# 設定 PATH
-$env:PATH = 'C:\msys64\mingw64\bin;D:\AiWorkSpace\M487_ScsiTool\tool\openocd-build\bin;' + $env:PATH
-
 # 燒錄
-cd D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD-Nuvoton\OpenOCD\bin
-.\openocd.exe -s ../scripts -f D:/AiWorkSpace/M487_ScsiTool/tool/openocd/nulink_m487_ice.cfg `
+cd D:\AiWorkSpace\M487_ScsiTool\firmware\composite\build_gcc
+D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\openocd.bat `
+  -f D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\nulink_m487_ice.cfg `
   -c "init" `
   -c "reset halt" `
-  -c "flash write_image erase D:/AiWorkSpace/M487_ScsiTool/firmware/composite/build/firmware.bin 0" `
+  -c "flash write_image erase firmware.bin 0" `
   -c "shutdown"
 ```
 
@@ -123,7 +121,8 @@ Info : Verified OK
 ### 基本連線測試
 
 ```powershell
-D:\AiWorkSpace\M487_ScsiTool\tool\openocd\openocd.bat `
+D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\openocd.bat `
+  -f D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\nulink_m487_ice.cfg `
   -c "init" -c "targets" -c "shutdown"
 ```
 
@@ -144,7 +143,8 @@ shutdown command invoked
 ### Reset Halt 測試
 
 ```powershell
-D:\AiWorkSpace\M487_ScsiTool\tool\openocd\openocd.bat `
+D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\openocd.bat `
+  -f D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\nulink_m487_ice.cfg `
   -c "init" -c "reset halt" -c "targets" -c "shutdown"
 ```
 
@@ -157,7 +157,8 @@ xPSR: 0x01000000 pc: 0x100028f0 msp: 0x20020000
 ### 寄存器讀取測試
 
 ```powershell
-D:\AiWorkSpace\M487_ScsiTool\tool\openocd\openocd.bat `
+D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\openocd.bat `
+  -f D:\AiWorkSpace\M487_ScsiTool\tool\OpenOCD\nulink_m487_ice.cfg `
   -c "init" -c "reset halt" -c "reg pc" -c "reg xpsr" -c "shutdown"
 ```
 
@@ -201,9 +202,15 @@ $ELF = "D:\AiWorkSpace\M487_ScsiTool\firmware\composite\build_gcc\firmware.elf"
 
 ### Q: `LIBUSB_ERROR_ACCESS`
 
-執行時缺少 MSYS2 DLL。使用 wrapper 或手動設定 PATH：
-```powershell
-$env:PATH = 'C:\msys64\mingw64\bin;' + $env:PATH
+執行時缺少 MSYS2 DLL。透過 `openocd.bat` 執行即可，對內已自動設定 PATH。
+
+### Q: 燒錄成功但查不到燒錄內容
+
+cfg 檔遺失 `hla layout nulink`。編輯 `nulink_m487_ice.cfg`，確認內容如下：
+```
+adapter driver hla
+hla layout nulink     ← 此行必須存在
+hla vid_pid 0x0416 0x511C
 ```
 
 ### Q: `CMSIS-DAP command CMD_INFO failed`
@@ -227,12 +234,12 @@ $env:PATH = 'C:\msys64\mingw64\bin;' + $env:PATH
 
 | 用途 | 路徑 |
 |------|------|
-| **OpenOCD** | `tool\openocd-build\bin\openocd.exe` |
-| **OpenOCD Config** | `tool\openocd\nulink_m487_ice.cfg` |
-| **Wrapper** | `tool\openocd\openocd.bat` |
+| **OpenOCD** | `tool\OpenOCD\bin\openocd.exe` |
+| **OpenOCD Config** | `tool\OpenOCD\nulink_m487_ice.cfg` |
+| **Wrapper** | `tool\OpenOCD\openocd.bat` |
 | **launch.json** | `firmware\composite\.vscode\launch.json` |
-| **韌體 (ELF)** | `firmware\composite\build\firmware.elf` |
-| **韌體 (BIN)** | `firmware\composite\build\firmware.bin` |
+| **韌體 (ELF)** | `firmware\composite\build_gcc\firmware.elf` |
+| **韌體 (BIN)** | `firmware\composite\build_gcc\firmware.bin` |
 | **MSYS2 DLL** | `C:\msys64\mingw64\bin\` |
 
 ---
@@ -249,4 +256,4 @@ $env:PATH = 'C:\msys64\mingw64\bin;' + $env:PATH
 
 ---
 
-*最後更新：2026-03-30 11:41*
+*最後更新：2026-03-31 10:54*

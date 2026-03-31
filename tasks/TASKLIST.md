@@ -1,4 +1,4 @@
-﻿# 任務清單 / Task List
+# 任務清單 / Task List
 
 > 最後更新:2026-03-30
 > Review 日期:2026-03-30（ICE 突破更新）
@@ -36,7 +36,7 @@
 
 ## T001 - USB 複合裝置(MSC + HID I2C 自訂格式)
 
-**狀態:** 🔄 進行中（ICE 已驗證，🔥 重大突破 2026-03-30）
+**狀態:** ⏸️ 暫停（等硬體 power-cycle）
 **起始:** 2026-03-26
 **Branch:** `firmware/composite-rewrite`
 **目標:** M487 USB 複合裝置(自訂 HID Report 格式)
@@ -47,16 +47,55 @@
 - [x] 韌體編譯(61.2KB)
 - [x] **OpenOCD + Nu-Link ICE 燒錄驗證（2026-03-30）** 🔥
 - [x] **VSCode F5 Debug 驗證（2026-03-30）** 🔥
-- [ ] **燒錄後 USB 枚舉驗證（VID=0x04F3 PID=0x0732）**
+- [x] **I2C_Read() 功能完整實作（確認於 2026-03-31）** ✅
+- [x] **OpenOCD cfg 修復（2026-03-31）：hla layout nulink 已補回** 🔧
+- [ ] **燒錄後 USB 枚舉驗證（VID=0x04F3 PID=0x0732）** ← 等 power-cycle
 - [ ] MSC RAM Disk 功能驗證
 - [ ] HID I2C 通訊驗證
-- [ ] I2C Read 功能實作(I2C_Read 函式 stub)
 
 **ICE 突破（2026-03-30）：**
 - ✅ `openocd-build\bin\openocd.exe` + `hla driver` + `hla layout nulink`
 - ✅ `nulink_m487_ice.cfg` 已驗證
 - ✅ VSCode F5 Debug 可用
 - ✅ Reset halt / Breakpoints / Watchpoints 全部正常
+
+**子任務（2026-03-30）：**
+- ✅ **T001-ST1** — 研究 BSP SampleCode HSUSBD_Mass_Storage ShortPacket KEIL → GCC 移植 ✅（Kururu 完成）
+- ✅ **T001-ST2** — 建立 GCC Makefile，編譯 HSUSBD ShortPacket Sample ✅（Giroro 完成）
+  - Binary: 44,288 bytes（ELF: 79,984 bytes）
+  - Flash 位址：`0x10000000`（M487 APROM 512KB）
+- ✅ **T001-ST3** — OpenOCD 燒錄 script 建立 ✅（Giroro 完成）
+  - 燒錄 script：`build_gcc/flash.bat`（使用 `flash write_image erase`）
+  - 驗證文件：`build_gcc/VERIFY.md`
+- 🔄 **T001-ST4** — 硬體燒錄驗證 ⏳（等 power-cycle 確認 USB MSC 枚舉）
+
+**🔥 Flash 燒錄突破（2026-03-30）：**
+- ✅ **OpenOCD numicro flash driver 有 Bug** — `Device ID 0x10004180` 回傳 UNKNOWN，auto-probe 失敗
+- ✅ **GDB load 繞過 flash driver 成功燒錄** — `arm-none-eabi-gdb --batch load`
+  ```
+  Loading section .text, size 0xa2f8 lma 0x10000000
+  Loading section .ARM.exidx, size 0x8 lma 0x1000a2f8
+  Loading section .data, size 0xa00 lma 0x1000a300
+  Start address 0x10002184, load size 44288
+  Transfer rate: 8650 KB/sec
+  ```
+- ⚠️ **燒錄後需 power-cycle** — `reset run` 無法正確設定 FMC remap，CPU fetch vector 從 0x00000000 拿到錯誤值
+- 📝 **燒錄 script 已建立：** `D:\AiWorkSpace\KM\M480BSP\SampleCode\StdDriver\HSUSBD_Mass_Storage_ShortPacket\build_gcc\flash_gdb.bat`
+
+**OpenOCD Config 發現：**
+- ✅ `nulink_m487_ice.cfg` — Debug 可用（ICE 連線正常）
+- ❌ 所有含 `flash bank numicro` 的 config — 燒錄失敗（numicro driver 不支援 M487 Device ID 0x10004180）
+- 參考：`tool/openocd/m487_flash_explicit.cfg`, `m487_alias_flash.cfg`, `m487_aprom_flash.cfg`
+
+**下一步（等 Caro power-cycle）：**
+1. Power-cycle M487 硬體
+2. 檢查 USB 是否有 MSC + HID 枚舉（VID=0x04F3, PID=0x0732）
+3. 若成功 → 測試 HID I2C 通訊 + MSC RAM Disk
+4. 若失敗 → 檢查 M487 USB 線路或 SampleCode 配置
+
+**ICE 工具設定（2026-03-31 修復）：**
+- cfg: `tool\OpenOCD\nulink_m487_ice.cfg`（確認含 `hla layout nulink`）
+- wrapper: `tool\OpenOCD\openocd.bat`（自動設定 MSYS2 PATH）
 
 **位置:** `D:\AiWorkSpace\M487_ScsiTool\firmware\composite\`
 
@@ -995,7 +1034,7 @@ py itm_trace_viewer.py --list-ports
 
 | 任務 | 狀態 | 優先 |
 |------|------|------|
-| T001 | 🔄 進行中(ICE 已突破) | 🔥 |
+| T001 | ⏸️ 等硬體（軟體部分完成）| 🔥 |
 | T002 | ✅ Finish | - |
 | T003 | ✅ Finish | - |
 | T004 | ✅ Finish | - |
