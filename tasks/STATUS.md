@@ -8,10 +8,10 @@
 
 | 狀態 | 數量 |
 |------|------|
-| ✅ 完成 | 24 |
+| ✅ 完成 | 26 |
 | 🔄 進行中 | 1 (T001-ST4) |
-| ⏳ 待處理 | 4 (T036-T039) |
-| ⏳ 待硬體確認 | 1 |
+| ⏳ 待處理 | 2 (T038, T039) |
+| ⏸️ 待硬體確認 | 1 |
 
 ---
 
@@ -27,6 +27,8 @@
 | T001-ST1 | 研究 BSP SampleCode ShortPacket KEIL → GCC ✅ |
 | T001-ST2 | GCC Makefile 建立 + 編譯 44KB ✅ |
 | T001-ST3 | OpenOCD 燒錄 script 建立 ✅ |
+| **T036** | Unit Test 知識庫（Unity/Ceedling/GoogleTest，17 檔，130+ 測試案例）✅ |
+| **T037** | Microsoft USB Driver Samples 研究（firefly/USB/HID/Filter 架構）✅ |
 
 ---
 
