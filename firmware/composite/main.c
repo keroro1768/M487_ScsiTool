@@ -22,6 +22,7 @@
 #include "uart_debug.h"
 #include "self_test.h"
 #include "flash_error.h"
+#include "msc_ramdisk.h"
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* System Clock Configuration                                                                              */
@@ -69,9 +70,7 @@ void SYS_Init(void)
     SYS->GPB_MFPH &= ~(SYS_GPB_MFPH_PB12MFP_Msk | SYS_GPB_MFPH_PB13MFP_Msk);
     SYS->GPB_MFPH |= (SYS_GPB_MFPH_PB12MFP_UART0_RXD | SYS_GPB_MFPH_PB13MFP_UART0_TXD);
 
-    /* Configure I2C pins: PE2=CLK, PE3=DAT0 (UI2C0) */
-    SYS->GPE_MFPL &= ~(SYS_GPE_MFPL_PE2MFP_Msk | SYS_GPE_MFPL_PE3MFP_Msk);
-    SYS->GPE_MFPL |= (SYS_GPE_MFPL_PE2MFP_USCI0_CLK | SYS_GPE_MFPL_PE3MFP_USCI0_DAT0);
+    /* I2C0 pins (PG0=SCL, PG1=SDA) are configured in I2C0_Init() */
 
     /* Configure PB8 as SWO (Single Wire Output) for ITM trace */
     /* NOTE: Value 0x07 is a common setting for SWO on Nuvoton M-series - verify with datasheet */
@@ -167,23 +166,42 @@ int main(void)
     /* HID endpoint configuration + MSC BOT init */
     HID_Init();
 
-    /* Initialize MSC Vendor Debug Channel */
-    MSC_Debug_Init();
-    MSC_LOG("MSC Vendor Debug Channel initialized\n");
-    MSC_TRACE("[MSC_DEBUG] Debug channel ready\n");
-
-    /* Initialize Flash Error Log (persistent error storage) */
+    /* Initialize FAT12 RAM Disk (must be after HID_Init which sets g_u32StorageBase) */
     {
-        uint16_t u16Head, u16Tail, u16Count;
-        if (FlashError_Init() == 0) {
-            FlashError_GetInfo(&u16Head, &u16Tail, &u16Count);
-            printf("Flash ErrorLog initialized (slot=%u, count=%u)\n", u16Head, u16Count);
-            I2C_LOG("[FLASH] ErrorLog initialized\n");
-        } else {
-            printf("Flash ErrorLog FAILED to initialize\n");
-            I2C_LOG("[FLASH] ErrorLog init FAILED\n");
+        extern uint32_t g_u32StorageBase;
+        extern int32_t g_TotalSectors;
+        RamDisk_Init((uint8_t *)g_u32StorageBase, (uint32_t)g_TotalSectors);
+
+        /* Run I2C bus scan and write results to LOG.TXT */
+        {
+            char buf[80];
+            uint8_t addrs[16];
+            int32_t count, j;
+
+            RamDisk_Log("=== M487 I2C Bus Scanner ===\r\n");
+            RamDisk_Log("I2C0: PG0(SCL)/PG1(SDA) [Arduino D15/D14] @ 100kHz\r\n");
+            RamDisk_Log("Scanning 0x03-0x77...\r\n\r\n");
+
+            count = I2C_Scan(addrs, 16);
+
+            snprintf(buf, sizeof(buf), "Found %d device(s):\r\n", (int)count);
+            RamDisk_Log(buf);
+
+            for (j = 0; j < count; j++) {
+                snprintf(buf, sizeof(buf), "  [%d] 0x%02X\r\n", (int)j, addrs[j]);
+                RamDisk_Log(buf);
+            }
+
+            if (count == 0) {
+                RamDisk_Log("  (no devices found)\r\n");
+            }
+
+            RamDisk_Log("\r\n--- End of scan ---\r\n");
         }
     }
+
+    /* Initialize MSC Vendor Debug Channel */
+    MSC_Debug_Init();
 
     /* Enable USBD interrupt */
     NVIC_EnableIRQ(USBD20_IRQn);

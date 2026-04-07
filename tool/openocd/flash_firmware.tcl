@@ -1,0 +1,7 @@
+proc flash_firmware {} {
+    halt
+    flash write_image erase D:/AiWorkSpace/M487_ScsiTool/firmware/composite/build_gcc/firmware.bin 0x0
+    reset run
+    shutdown
+}
+flash_firmware

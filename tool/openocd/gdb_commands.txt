@@ -1,0 +1,5 @@
+set confirm off
+target remote localhost:3333
+load D:/AiWorkSpace/M487_ScsiTool/firmware/composite/build_gcc/firmware.bin
+detach
+quit
