@@ -142,7 +142,7 @@ USB Host                          M487 Bridge                         I²C HID D
   │ ──────────────────────────────────►│                                    │
   │                                    │                                    │
   │                                    │ Write Command Register:           │
-  │                                    │   [0x02][0x00|Duration]            │
+  │                                    │   [0x50][Duration]                 │
   │                                    │ I²C Write                          │
   │                                    │───────────────────────────────────►│
   │                                    │                                    │
