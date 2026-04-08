@@ -1,6 +1,6 @@
 # M487_ScsiTool 任務總覽 / Status
 
-> 最後更新：2026-04-07 12:34
+> 最後更新：2026-04-08 08:27
 
 ---
 
@@ -50,14 +50,16 @@
 
 ---
 
-## ⚠️ 待處理（Dororo 發現問題需修復）
+## ⚠️ 待修復（Dororo 發現，T039 驗收阻礙）
 
 | 優先 | 問題 | 位置 |
 |------|------|------|
-| Major | SET_IDLE 指令格式矛盾（Opcode Table vs 範例）| TRANSLATION.md §1.6 |
-| Major | MLX90614 為 SMBus 非 HID-over-I2C，未明確說明 | EXAMPLE.md |
-| Major | HID Descriptor wMaxInputLength=4 會截斷資料 | EXAMPLE.md |
+| **Major** | SET_IDLE 指令格式矛盾：`[0x02][...]` vs Opcode Table (`opcode=0x05` → `0x50`) | TRANSLATION.md §1.6 |
+| **Major** | MLX90614 為 SMBus 裝置，非 HID-over-I2C，文件未明確說明 | EXAMPLE.md |
+| **Major** | HID Descriptor `wMaxInputLength=4`，但溫度資料實為 6 bytes，會截斷 | EXAMPLE.md |
 | Minor | 內部連結路徑需修正（`../ICE/` → `../../ICE/`）| NuLink 文件 |
+| Minor | 外部 URL（Nuvoton 下載連結）需驗證，建議改用 GitHub BSP | M487_Usage_Guide.md |
+| Minor | SPEC.md 本地檔案路徑無法驗證 | SPEC.md |
 
 ---
 
@@ -67,13 +69,12 @@
 
 ---
 
-## 🆕 今日重大發現
+## 📌 待 commit（有未保存變更）
 
-| 發現 | 影響 |
+| 檔案 | 說明 |
 |------|------|
-| OpenOCD numicro flash driver 不支援 M487（Device ID 0x10004180）| 燒錄需繞道 GDB load |
-| GDB load 可燒錄 flash | 燒錄路徑驗證成功 |
-| `reset run` 後 FMC remap 未設定 | 需 power-cycle 讓 boot ROM 正確 remap |
+| `tasks/TASKLIST.md` | 編碼修正（+725/-725 行）|
+| `tool/openocd-src/` | 未同步變更 |
 
 ---
 
@@ -89,6 +90,14 @@
 | L4 | ITM/SWO + Viewer | ✅ |
 | L4 | Flash Error Log | ✅ |
 | L4 | Self-Test Mode | ✅ |
+
+---
+
+## Enhancement Backlog
+
+| ID | 名稱 | 最後更新 | 狀態 |
+|----|------|----------|------|
+| E001 | ICE_Breakthrough | 2026-03-30 | 🔄 實施中 |
 
 ---
 
