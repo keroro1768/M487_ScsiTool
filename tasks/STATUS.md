@@ -1,6 +1,6 @@
 # M487_ScsiTool 任務總覽 / Status
 
-> 最後更新：2026-04-08 08:27
+> 最後更新：2026-04-12 09:58
 
 ---
 
@@ -19,8 +19,7 @@
 | 任務 | 說明 |
 |------|------|
 | T001 | USB 複合裝置（韌體完成，ICE 已突破）|
-| T002-T005 | 編譯環境、OpenOCD |
-| T006 | Windows C++ Win32 HID Tool |
+| T002-T006 | 編譯環境、OpenOCD、HID Tool |
 | T008-T012 | BSP 整合、Review、Toolchain |
 | T014-T023 | NACK Retry、Magic Numbers、Buffer、Build 強化 |
 | T024-T034 | ITM/SWO、MSC Debug Channel、UART、Flash、Self-Test、GDB、DWT |
@@ -47,7 +46,7 @@
 | **T036** | Unit Test 知識庫（Unity/Ceedling/GoogleTest，17 檔，130+ 測試案例）✅ |
 | **T037** | Microsoft USB Driver Samples 研究（firefly/USB/HID/Filter 架構）✅ |
 | **T038** | Linux FWUPD 韌體更新知識庫（22 檔，215KB）✅ |
-| **T039** | 文件驗收 ⚠️ CONDITIONAL PASS（2 Major + 5 Minor 待修）|
+| **T039** | 文件驗收 ✅ 所有 Major 已修復（Minor 建議不阻礙通過）|
 
 ---
 
@@ -56,8 +55,8 @@
 | 優先 | 問題 | 位置 |
 |------|------|------|
 | ~~**Major**~~ ✅ | SET_IDLE 指令格式矛盾 → **已修復** (`1e22b3b`) | TRANSLATION.md §1.6 |
-| **Major** | MLX90614 為 SMBus 裝置，非 HID-over-I2C，文件未明確說明 | EXAMPLE.md |
-| **Major** | HID Descriptor `wMaxInputLength=4`，但溫度資料實為 6 bytes，會截斷 | EXAMPLE.md |
+| ~~**Major**~~ ✅ | MLX90614 為 SMBus 裝置 → **已修復** (新增 ⚠️ 警告聲明) | EXAMPLE.md |
+| ~~**Major**~~ ✅ | HID Descriptor `wMaxInputLength=4` → **已修復** (改為 6) | EXAMPLE.md |
 | Minor | 內部連結路徑需修正（`../ICE/` → `../../ICE/`）| NuLink 文件 |
 | Minor | 外部 URL（Nuvoton 下載連結）需驗證，建議改用 GitHub BSP | M487_Usage_Guide.md |
 | Minor | SPEC.md 本地檔案路徑無法驗證 | SPEC.md |

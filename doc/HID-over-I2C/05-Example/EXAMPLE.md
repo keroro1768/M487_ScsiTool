@@ -1,6 +1,6 @@
 # HID-over-I²C Bridge — Example Device: MLX90614 IR Sensor
 
-> This document shows how to use the bridge with a real HID-over-I²C device.
+> ⚠️ **注意：** MLX90614 本身是 **SMBus** 設備，不支援 HID-over-I²C 協議。本範例建立了一個**虛擬 HID-over-I²C 包裝層**來展示 bridge 與設備的互動模式，而非實際的 HID-over-I²C 設備範例。如需驗證 HID-over-I²C 實作，建議使用真正支援 HID-over-I²C 的設備（如特定觸控板或感測器）。
 
 ---
 
@@ -53,7 +53,7 @@ const uint8_t virtHIDDescriptor[30] = {
     0x2C, 0x00,       // wReportDescLength = 44
     0x02, 0x00,       // wReportDescRegister = 2
     0x03, 0x00,       // wInputRegister = 3
-    0x04, 0x00,       // wMaxInputLength = 4 (2 bytes + length)
+    0x06, 0x00,       // wMaxInputLength = 6 (2 bytes temp + 2 bytes ambient + 2-byte length prefix)
     0x04, 0x00,       // wOutputRegister = 4
     0x04, 0x00,       // wMaxOutputLength = 4
     0x05, 0x00,       // wCommandRegister = 5
