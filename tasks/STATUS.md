@@ -1,6 +1,6 @@
 # M487_ScsiTool 任務總覽 / Status
 
-> 最後更新：2026-04-13 19:01
+> 最後更新：2026-04-13 22:01
 
 ---
 
@@ -11,6 +11,7 @@
 | ✅ 完成 | 27 |
 | 🔄 進行中 | 1 (T001-ST4) |
 | ⏸️ 待硬體確認 | 1 |
+| ⏳ 待處理 | 2 (T040, T041) |
 
 ---
 
@@ -69,13 +70,12 @@
 
 ---
 
-## 📌 待 commit（有未保存變更）
+## ⏳ 待處理
 
-| 檔案 | 說明 |
-|------|------|
-| `tasks/TASKLIST.md` | 編碼修正（+654/-1094 行）|
-| `tasks/STATUS.md` | T036/T037 恢復 + 更新 footer（待確認）|
-| `tool/openocd-src/` | submodule 待同步 |
+| 任務 | 負責 | 說明 |
+|------|------|------|
+| **T040** | 🦀 Dororo | `hid_bridge`/`tool/hidtool_cpp` 文件審查 |
+| **T041** | 🦀 Dororo | 建置 + 測試驗證（依賴 T040）|
 
 ---
 
@@ -102,4 +102,4 @@
 
 ---
 
-*T001-ST4 ⏸️ 等 Caro power-cycle。其餘任務（T036-T039 知識庫已完成，`hid_bridge/` 及 `tool/hidtool_cpp/` 已 commit）。*
+*T001-ST4 ⏸️ 等 Caro power-cycle。T036-T039 知識庫已完成，`hid_bridge/` + `tool/hidtool_cpp/` 已 commit。T040/T041 待 Dororo Review。*
