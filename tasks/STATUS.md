@@ -1,6 +1,6 @@
 # M487_ScsiTool 任務總覽 / Status
 
-> 最後更新：2026-04-12 09:58
+> 最後更新：2026-04-13 19:01
 
 ---
 
@@ -26,8 +26,8 @@
 | T001-ST1 | 研究 BSP SampleCode ShortPacket KEIL → GCC ✅ |
 | T001-ST2 | GCC Makefile 建立 + 編譯 44KB ✅ |
 | T001-ST3 | OpenOCD 燒錄 script 建立 ✅ |
-| **T036** | Unit Test 知識庫（Unity/Ceedling/GoogleTest，17 檔，130+ 測試案例）✅ |
-| **T037** | Microsoft USB Driver Samples 研究（firefly/USB/HID/Filter 架構）✅ |
+| T036 | Unit Test 知識庫（Unity/Ceedling/GoogleTest，17 檔，130+ 測試案例）✅ |
+| T037 | Microsoft USB Driver Samples 研究（firefly/USB/HID/Filter 架構）✅ |
 
 ---
 
@@ -73,8 +73,9 @@
 
 | 檔案 | 說明 |
 |------|------|
-| `tasks/TASKLIST.md` | 編碼修正（+725/-725 行）|
-| `tool/openocd-src/` | 未同步變更 |
+| `tasks/TASKLIST.md` | 編碼修正（+654/-1094 行）|
+| `tasks/STATUS.md` | T036/T037 恢復 + 更新 footer（待確認）|
+| `tool/openocd-src/` | submodule 待同步 |
 
 ---
 
@@ -101,4 +102,4 @@
 
 ---
 
-*T001-ST4 ⏸️ 等 Caro power-cycle。其餘任務（T038/T039 已完成，T039 有 2 Major 待修，SET_IDLE 已修復）。*
+*T001-ST4 ⏸️ 等 Caro power-cycle。其餘任務（T036-T039 知識庫已完成，`hid_bridge/` 及 `tool/hidtool_cpp/` 已 commit）。*
