@@ -1,286 +1,415 @@
 /**
- * HID I2C Bridge - Command Line Interface
+ * @file     main.cpp
+ * @brief    M487 USB HID I2C Bridge - Windows CLI Tool
+ * @version  1.0.0
  * 
- * Tool for testing M487 HID I2C Bridge functionality
+ * Targets: M487 USB Composite Device (VID=0x04F3, PID=0x0732)
+ * 
+ * Uses Windows HID API (hid.dll) with Interrupt Endpoint transfers.
  */
 
-#include "hid_i2c.h"
+#include "hid_device.h"
 #include <iostream>
 #include <iomanip>
 #include <sstream>
 #include <vector>
 #include <cstring>
-#include <algorithm>
 #include <conio.h>
 
-void printBanner()
+using namespace std;
+
+/*---------------------------------------------------------------------------------------------------------*/
+/* Helpers                                                                                                  */
+/*---------------------------------------------------------------------------------------------------------*/
+static void printBanner()
 {
-    std::cout << "\n";
-    std::cout << "  ===========================================\n";
-    std::cout << "       M487 HID I2C Bridge CLI Tool\n";
-    std::cout << "  ===========================================\n";
-    std::cout << "\n";
+    cout << "\n";
+    cout << "  ======================================================\n";
+    cout << "        M487 USB HID I2C Bridge CLI Tool\n";
+    cout << "        VID=0x04F3, PID=0x0732\n";
+    cout << "  ======================================================\n";
+    cout << "\n";
 }
 
-void printHelp()
+static void printHelp()
 {
-    std::cout << "  Commands:\n";
-    std::cout << "    enumerate, enum   - List available HID I2C Bridge devices\n";
-    std::cout << "    connect           - Connect to first device\n";
-    std::cout << "    disconnect        - Disconnect from device\n";
-    std::cout << "    status            - Show connection status\n";
-    std::cout << "    \n";
-    std::cout << "  I2C Commands:\n";
-    std::cout << "    scan              - I2C: Scan for devices (quick test)\n";
-    std::cout << "    write <addr> <hex> - I2C: Write data to slave\n";
-    std::cout << "    read <addr> <len> - I2C: Read bytes from slave\n";
-    std::cout << "    writeread <addr> <whex> <rlen> - I2C: Write then read\n";
-    std::cout << "    \n";
-    std::cout << "  Examples:\n";
-    std::cout << "    scan               - Scan all I2C addresses\n";
-    std::cout << "    write 0x3C 0x00  - Write 0x00 to device at 0x3C\n";
-    std::cout << "    read 0x3C 1       - Read 1 byte from 0x3C\n";
-    std::cout << "    writeread 0x3C 0x00 1 - Write reg addr, read 1 byte\n";
-    std::cout << "    \n";
-    std::cout << "    help               - Show this help\n";
-    std::cout << "    exit, quit        - Exit program\n";
-    std::cout << "\n";
+    cout << "  Device Commands:\n";
+    cout << "    list                - List all M487 HID devices\n";
+    cout << "    open [idx]          - Connect to device (default: index 0)\n";
+    cout << "    close               - Disconnect from device\n";
+    cout << "    info                - Show device info (VID/PID/version)\n";
+    cout << "    test                - Test connection with device\n";
+    cout << "\n";
+    cout << "  I2C Commands:\n";
+    cout << "    scan                - Scan I2C bus for devices\n";
+    cout << "    write <addr> <hex>  - Write hex data to I2C slave\n";
+    cout << "    read <addr> <len>   - Read <len> bytes from I2C slave\n";
+    cout << "    writeread <addr> <whex> <rlen>\n";
+    cout << "                       - Write hex data, then read <rlen> bytes\n";
+    cout << "\n";
+    cout << "  Examples:\n";
+    cout << "    list                - Find all connected M487 devices\n";
+    cout << "    open                - Connect to first device\n";
+    cout << "    scan                - Scan I2C addresses 0x01-0x7F\n";
+    cout << "    write 0x3C 0x00     - Write 0x00 to device at 0x3C\n";
+    cout << "    read 0x3C 1         - Read 1 byte from 0x3C\n";
+    cout << "    writeread 0x3C 0x00 1  - Write reg addr, read 1 byte\n";
+    cout << "\n";
+    cout << "    help, ?             - Show this help\n";
+    cout << "    exit, quit          - Exit program\n";
+    cout << "\n";
 }
 
-std::vector<uint8_t> parseHexString(const std::string& hexStr)
+static vector<uint8_t> parseHexString(const string& hexStr)
 {
-    std::vector<uint8_t> result;
-    std::string cleaned;
-    
+    vector<uint8_t> result;
+    string cleaned;
+
     for (char c : hexStr) {
-        if (c >= '0' && c <= '9') cleaned.push_back(c);
-        else if (c >= 'A' && c <= 'F') cleaned.push_back(c);
-        else if (c >= 'a' && c <= 'f') cleaned.push_back(c);
+        if (c >= '0' && c <= '9') cleaned += c;
+        else if (c >= 'A' && c <= 'F') cleaned += c;
+        else if (c >= 'a' && c <= 'f') cleaned += c;
+        else if (c == ' ') continue; // ignore spaces
     }
 
     for (size_t i = 0; i + 1 < cleaned.size(); i += 2) {
-        std::string byteStr = cleaned.substr(i, 2);
-        uint8_t byte = static_cast<uint8_t>(std::stoi(byteStr, nullptr, 16));
+        string byteStr = cleaned.substr(i, 2);
+        uint8_t byte = static_cast<uint8_t>(stoi(byteStr, nullptr, 16));
         result.push_back(byte);
     }
-
     return result;
 }
 
-std::string bytesToHex(const uint8_t* data, size_t length)
+static string toHex(uint8_t val)
 {
-    std::ostringstream oss;
-    for (size_t i = 0; i < length; ++i) {
+    ostringstream oss;
+    oss << uppercase << hex << setw(2) << setfill('0') << (int)val;
+    return oss.str();
+}
+
+static string bytesToHex(const uint8_t* data, size_t len, size_t cols = 16)
+{
+    ostringstream oss;
+    for (size_t i = 0; i < len; ++i) {
         if (i > 0) {
-            if (i % 16 == 0) oss << "\n    ";
+            if (cols > 0 && i % cols == 0) oss << "\n    ";
             else if (i % 2 == 0) oss << " ";
         }
-        oss << std::uppercase << std::hex << std::setw(2) << std::setfill('0') 
-            << static_cast<int>(data[i]);
+        oss << uppercase << hex << setw(2) << setfill('0') << (int)data[i];
     }
     return oss.str();
 }
 
-std::string toHex(uint8_t val)
-{
-    std::ostringstream oss;
-    oss << std::uppercase << std::hex << std::setw(2) << std::setfill('0') << (int)val;
-    return oss.str();
-}
-
+/*---------------------------------------------------------------------------------------------------------*/
+/* Main                                                                                                    */
+/*---------------------------------------------------------------------------------------------------------*/
 int main()
 {
     setlocale(LC_ALL, "");
 
-    HidI2CBridge bridge;
+    M487HidDevice device;
     printBanner();
     printHelp();
 
     while (true) {
-        std::cout << "\nHID-I2C> ";
-        std::cout.flush();
+        cout << "\nM487-HID> ";
+        cout.flush();
 
-        std::string line;
-        if (!std::getline(std::cin, line)) {
-            break;
-        }
+        string line;
+        if (!getline(cin, line)) break;
 
-        // Trim whitespace
-        while (!line.empty() && (line[0] == ' ' || line[0] == '\t')) {
-            line = line.substr(1);
-        }
-        while (!line.empty() && (line.back() == ' ' || line.back() == '\t')) {
-            line.pop_back();
-        }
-
+        // Trim
+        size_t start = line.find_first_not_of(" \t");
+        if (start == string::npos) continue;
+        size_t end = line.find_last_not_of(" \t");
+        line = line.substr(start, end - start + 1);
         if (line.empty()) continue;
 
-        std::istringstream iss(line);
-        std::string cmd;
+        // Parse command
+        istringstream iss(line);
+        string cmd;
         iss >> cmd;
 
-        // Convert to lowercase
-        for (char& c : cmd) {
-            if (c >= 'A' && c <= 'Z') c = c + 32;
-        }
+        // Lowercase cmd
+        for (char& c : cmd) c = (c >= 'A' && c <= 'Z') ? (c + 32) : c;
 
+        // ----------------------------------------------------------------
+        // Exit
+        // ----------------------------------------------------------------
         if (cmd == "exit" || cmd == "quit") {
-            std::cout << "Goodbye!\n";
+            cout << "Goodbye!\n";
             break;
         }
-        else if (cmd == "help") {
+        else if (cmd == "help" || cmd == "?") {
             printHelp();
         }
-        else if (cmd == "enumerate" || cmd == "enum") {
-            std::cout << "  Enumerating HID I2C Bridge devices (VID=0x0416, PID=0x5020)...\n";
-            if (bridge.enumerateDevices()) {
-                const auto& list = bridge.getDeviceList();
-                for (int i = 0; i < static_cast<int>(list.size()); ++i) {
-                    std::cout << "  [" << i << "] " << list[i].substr(0, 60) << "...\n";
+        // ----------------------------------------------------------------
+        // list - enumerate devices
+        // ----------------------------------------------------------------
+        else if (cmd == "list") {
+            cout << "  Searching for M487 HID devices (VID=0x04F3, PID=0x0732)...\n";
+
+            if (!device.enumerate()) {
+                cout << "  [INFO] No M487 HID devices found.\n";
+                cout << "  Make sure the device is connected and the HID interface is active.\n";
+                continue;
+            }
+
+            const auto& devs = device.getDevices();
+            cout << "  Found " << devs.size() << " device(s):\n";
+            for (size_t i = 0; i < devs.size(); ++i) {
+                const auto& d = devs[i];
+                cout << "  [" << i << "] " << d.description << "\n";
+                cout << "      VID=0x" << toHex((uint8_t)(d.vid >> 8))
+                     << toHex((uint8_t)(d.vid & 0xFF))
+                     << " PID=0x" << toHex((uint8_t)(d.pid >> 8))
+                     << toHex((uint8_t)(d.pid & 0xFF)) << "\n";
+            }
+        }
+        // ----------------------------------------------------------------
+        // open [idx] - connect
+        // ----------------------------------------------------------------
+        else if (cmd == "open") {
+            size_t idx = 0;
+            string idxStr;
+            iss >> idxStr;
+            if (!idxStr.empty()) {
+                try { idx = stoul(idxStr); } catch (...) {}
+            }
+
+            if (device.isConnected()) {
+                cout << "  Already connected. Use 'close' first.\n";
+                continue;
+            }
+
+            // Ensure device list is populated
+            if (device.deviceCount() == 0) {
+                cout << "  Searching for devices...\n";
+                device.enumerate();
+            }
+
+            cout << "  Connecting to device[" << idx << "]...\n";
+            if (device.connect(idx)) {
+                cout << "  [OK] Connected successfully.\n";
+
+                HIDD_ATTRIBUTES attr = {};
+                if (device.getDeviceAttributes(&attr)) {
+                    cout << "      VID=0x" << toHex((uint8_t)(attr.VendorID >> 8))
+                         << toHex((uint8_t)(attr.VendorID & 0xFF))
+                         << " PID=0x" << toHex((uint8_t)(attr.ProductID >> 8))
+                         << toHex((uint8_t)(attr.ProductID & 0xFF))
+                         << " Ver=" << attr.VersionNumber << "\n";
                 }
-                std::cout << "  Found " << list.size() << " device(s)\n";
             } else {
-                std::cout << "  No devices found. Is the device connected?\n";
+                cout << "  [FAIL] " << device.getLastError() << "\n";
             }
         }
-        else if (cmd == "connect") {
-            if (bridge.isConnected()) {
-                std::cout << "  Already connected.\n";
+        // ----------------------------------------------------------------
+        // close - disconnect
+        // ----------------------------------------------------------------
+        else if (cmd == "close") {
+            device.disconnect();
+            cout << "  Disconnected.\n";
+        }
+        // ----------------------------------------------------------------
+        // info - show connection info
+        // ----------------------------------------------------------------
+        else if (cmd == "info") {
+            if (!device.isConnected()) {
+                cout << "  Not connected. Use 'open' first.\n";
                 continue;
             }
-            std::cout << "  Connecting...\n";
-            if (bridge.connect(0)) {
-                std::cout << "  [OK] Connected to HID I2C Bridge\n";
+
+            HIDD_ATTRIBUTES attr = {};
+            if (device.getDeviceAttributes(&attr)) {
+                cout << "  Device Info:\n";
+                cout << "    VID:       0x" << toHex((uint8_t)(attr.VendorID >> 8))
+                     << toHex((uint8_t)(attr.VendorID & 0xFF)) << "\n";
+                cout << "    PID:       0x" << toHex((uint8_t)(attr.ProductID >> 8))
+                     << toHex((uint8_t)(attr.ProductID & 0xFF)) << "\n";
+                cout << "    Version:   " << attr.VersionNumber << "\n";
             } else {
-                std::cout << "  [FAIL] " << bridge.getLastError() << "\n";
+                cout << "  [FAIL] Could not read device attributes.\n";
             }
         }
-        else if (cmd == "disconnect") {
-            bridge.disconnect();
-            std::cout << "  Disconnected.\n";
-        }
-        else if (cmd == "status") {
-            if (bridge.isConnected()) {
-                std::cout << "  Status: Connected\n";
+        // ----------------------------------------------------------------
+        // test - test connection
+        // ----------------------------------------------------------------
+        else if (cmd == "test") {
+            if (!device.isConnected()) {
+                cout << "  Not connected. Use 'open' first.\n";
+                continue;
+            }
+
+            cout << "  Testing connection...\n";
+            if (device.testConnection()) {
+                cout << "  [OK] Connection test passed.\n";
             } else {
-                std::cout << "  Status: Not connected\n";
+                cout << "  [FAIL] " << device.getLastError() << "\n";
             }
         }
+        // ----------------------------------------------------------------
+        // scan - I2C bus scan
+        // ----------------------------------------------------------------
         else if (cmd == "scan") {
-            if (!bridge.isConnected()) {
-                std::cout << "  Not connected. Use 'connect' first.\n";
+            if (!device.isConnected()) {
+                cout << "  Not connected. Use 'open' first.\n";
                 continue;
             }
-            std::cout << "  Scanning I2C bus for devices...\n";
-            std::cout << "       0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F\n";
-            
+
+            cout << "  Scanning I2C bus...\n";
+            cout << "       0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F\n";
+
+            uint8_t found[8] = {0};
+            int nFound = device.i2cScan(found);
+
             for (int base = 0; base < 128; base += 16) {
-                std::cout << "  " << std::setw(2) << std::setfill('0') << std::hex << base << "0: ";
+                cout << "  " << setw(2) << setfill('0') << hex << base << "0: ";
                 for (int offset = 0; offset < 16; ++offset) {
                     uint8_t addr = static_cast<uint8_t>(base + offset);
-                    uint8_t dummy = 0;
-                    
-                    // Try to read 1 byte - if ACK, device exists
-                    if (bridge.i2cRead(addr, &dummy, 1)) {
-                        std::cout << std::setfill(' ') << std::setw(2) << std::hex << (int)addr << " ";
+
+                    bool isFound = false;
+                    for (int i = 0; i < nFound; ++i) {
+                        if (found[i] == addr) { isFound = true; break; }
+                    }
+
+                    if (isFound) {
+                        cout << setfill(' ') << setw(2) << hex << (int)addr << " ";
                     } else {
-                        std::cout << "-- ";
+                        cout << "-- ";
                     }
                 }
-                std::cout << "\n";
+                cout << "\n";
             }
-            std::cout << std::dec;
+            cout << dec;
+
+            if (nFound > 0) {
+                cout << "  Found " << nFound << " device(s): ";
+                for (int i = 0; i < nFound; ++i) {
+                    cout << "0x" << toHex(found[i]);
+                    if (i < nFound - 1) cout << ", ";
+                }
+                cout << "\n";
+            } else {
+                cout << "  No I2C devices found on the bus.\n";
+            }
         }
+        // ----------------------------------------------------------------
+        // write <addr> <hex>
+        // ----------------------------------------------------------------
         else if (cmd == "write") {
-            if (!bridge.isConnected()) {
-                std::cout << "  Not connected. Use 'connect' first.\n";
+            if (!device.isConnected()) {
+                cout << "  Not connected. Use 'open' first.\n";
                 continue;
             }
-            uint8_t addr = 0;
-            std::string hexStr;
-            iss >> std::hex >> addr >> hexStr;
 
+            uint32_t addr = 0;
+            string hexStr;
+            iss >> hex >> addr >> hexStr;
+
+            if (addr > 127) {
+                cout << "  Invalid I2C address (0x01-0x7F)\n";
+                continue;
+            }
             if (hexStr.empty()) {
-                std::cout << "  Usage: write <addr> <hex_data>\n";
-                std::cout << "  Example: write 0x3C 0x00123344\n";
+                cout << "  Usage: write <addr> <hex_data>\n";
+                cout << "  Example: write 0x3C 0x00123344\n";
                 continue;
             }
 
             auto data = parseHexString(hexStr);
             if (data.empty()) {
-                std::cout << "  Invalid hex data\n";
+                cout << "  Invalid hex data.\n";
                 continue;
             }
 
-            std::cout << "  Writing " << data.size() << " bytes to 0x" << toHex(addr) << "...\n";
-            if (bridge.i2cWrite(addr, data.data(), static_cast<uint16_t>(data.size()))) {
-                std::cout << "  [OK] Write successful\n";
+            cout << "  Writing " << data.size() << " byte(s) to 0x" << toHex((uint8_t)addr) << "...\n";
+            if (device.i2cWrite((uint8_t)addr, data.data(), (uint16_t)data.size())) {
+                cout << "  [OK] Write successful.\n";
             } else {
-                std::cout << "  [FAIL] " << bridge.getLastError() << "\n";
+                cout << "  [FAIL] " << device.getLastError() << "\n";
             }
         }
+        // ----------------------------------------------------------------
+        // read <addr> <len>
+        // ----------------------------------------------------------------
         else if (cmd == "read") {
-            if (!bridge.isConnected()) {
-                std::cout << "  Not connected. Use 'connect' first.\n";
+            if (!device.isConnected()) {
+                cout << "  Not connected. Use 'open' first.\n";
                 continue;
             }
-            uint8_t addr = 0;
-            uint16_t len = 1;
-            iss >> std::hex >> addr >> std::dec >> len;
 
+            uint32_t addr = 0, len = 1;
+            iss >> hex >> addr >> dec >> len;
+
+            if (addr > 127) {
+                cout << "  Invalid I2C address (0x01-0x7F)\n";
+                continue;
+            }
             if (len == 0 || len > 62) len = 1;
 
-            std::cout << "  Reading " << len << " bytes from 0x" << toHex(addr) << "...\n";
-            
-            std::vector<uint8_t> data(len);
-            if (bridge.i2cRead(addr, data.data(), len)) {
-                std::cout << "  [OK] Read successful\n";
-                std::cout << "  Data (" << len << " bytes):" << bytesToHex(data.data(), len) << "\n";
+            cout << "  Reading " << len << " byte(s) from 0x" << toHex((uint8_t)addr) << "...\n";
+
+            vector<uint8_t> data(len, 0);
+            if (device.i2cRead((uint8_t)addr, data.data(), (uint16_t)len)) {
+                cout << "  [OK] Read successful.\n";
+                cout << "  Data (" << len << " bytes):" << bytesToHex(data.data(), len) << "\n";
             } else {
-                std::cout << "  [FAIL] " << bridge.getLastError() << "\n";
+                cout << "  [FAIL] " << device.getLastError() << "\n";
             }
         }
+        // ----------------------------------------------------------------
+        // writeread <addr> <whex> <rlen>
+        // ----------------------------------------------------------------
         else if (cmd == "writeread") {
-            if (!bridge.isConnected()) {
-                std::cout << "  Not connected. Use 'connect' first.\n";
+            if (!device.isConnected()) {
+                cout << "  Not connected. Use 'open' first.\n";
                 continue;
             }
-            uint8_t addr = 0;
-            std::string hexStr;
-            uint16_t rlen = 1;
-            iss >> std::hex >> addr >> hexStr >> std::dec >> rlen;
 
-            if (hexStr.empty()) {
-                std::cout << "  Usage: writeread <addr> <hex_write_data> <read_len>\n";
-                std::cout << "  Example: writeread 0x3C 0x00 1\n";
+            uint32_t addr = 0, rlen = 1;
+            string hexStr;
+            iss >> hex >> addr >> hexStr >> dec >> rlen;
+
+            if (addr > 127) {
+                cout << "  Invalid I2C address (0x01-0x7F)\n";
                 continue;
             }
+            if (hexStr.empty()) {
+                cout << "  Usage: writeread <addr> <write_hex> <read_len>\n";
+                cout << "  Example: writeread 0x3C 0x00 1\n";
+                continue;
+            }
+            if (rlen == 0 || rlen > 62) rlen = 1;
 
             auto wdata = parseHexString(hexStr);
             if (wdata.empty()) {
-                std::cout << "  Invalid hex data\n";
+                cout << "  Invalid hex data.\n";
                 continue;
             }
 
-            if (rlen == 0 || rlen > 62) rlen = 1;
+            cout << "  Write+Read: " << wdata.size() << " bytes -> "
+                 << rlen << " bytes from 0x" << toHex((uint8_t)addr) << "\n";
 
-            std::cout << "  Write+Read: " << wdata.size() << " bytes -> " << rlen << " bytes from 0x" << toHex(addr) << "\n";
-            
-            std::vector<uint8_t> rdata(rlen);
-            if (bridge.i2cWriteRead(addr, wdata.data(), static_cast<uint16_t>(wdata.size()), rdata.data(), rlen)) {
-                std::cout << "  [OK] Write+Read successful\n";
-                std::cout << "  Write Data: " << bytesToHex(wdata.data(), wdata.size()) << "\n";
-                std::cout << "  Read Data:  " << bytesToHex(rdata.data(), rlen) << "\n";
+            vector<uint8_t> rdata(rlen, 0);
+            if (device.i2cWriteRead((uint8_t)addr, wdata.data(), (uint16_t)wdata.size(),
+                                    rdata.data(), (uint16_t)rlen)) {
+                cout << "  [OK] Write+Read successful.\n";
+                cout << "  Write Data: " << bytesToHex(wdata.data(), wdata.size()) << "\n";
+                cout << "  Read Data:  " << bytesToHex(rdata.data(), rlen) << "\n";
             } else {
-                std::cout << "  [FAIL] " << bridge.getLastError() << "\n";
+                cout << "  [FAIL] " << device.getLastError() << "\n";
             }
         }
+        // ----------------------------------------------------------------
+        // Unknown
+        // ----------------------------------------------------------------
         else {
-            std::cout << "  Unknown command: " << cmd << "\n";
-            std::cout << "  Type 'help' for available commands.\n";
+            cout << "  Unknown command: " << cmd << "\n";
+            cout << "  Type 'help' for available commands.\n";
         }
     }
 
-    bridge.disconnect();
+    device.disconnect();
     return 0;
 }
