@@ -1,105 +1,98 @@
-# M487_ScsiTool 任務總覽 / Status
+﻿# M487_ScsiTool 隞餃?蝮質汗 / Status
 
-> 最後更新：2026-04-15 17:31
+> ?敺?堆?2026-04-15 17:31
 
 ---
 
-## 📊 任務狀態摘要
-
-| 狀態 | 數量 |
+## ?? 隞餃????閬?
+| ???| ?賊? |
 |------|------|
-| ✅ 完成 | 27 |
-| 🔄 進行中 | 1 (T001-ST4) |
-| ⏸️ 待硬體確認 | 1 |
-| ⏳ 待處理 | 2 (T040, T041) |
+| ??摰? | 27 |
+| ?? ?脰?銝?| 1 (T001-ST4) |
+| ?賂? 敺′擃Ⅱ隤?| 1 |
+| ??敺???| 2 (T040, T041) |
 
 ---
 
-## ✅ 已完成 (P0/P1/P2)
+## ??撌脣???(P0/P1/P2)
 
-| 任務 | 說明 |
+| 隞餃? | 隤芣? |
 |------|------|
-| T001 | USB 複合裝置（韌體完成，ICE 已突破）|
-| T002-T006 | 編譯環境、OpenOCD、HID Tool |
-| T008-T012 | BSP 整合、Review、Toolchain |
-| T014-T023 | NACK Retry、Magic Numbers、Buffer、Build 強化 |
-| T024-T034 | ITM/SWO、MSC Debug Channel、UART、Flash、Self-Test、GDB、DWT |
-| T001-ST1 | 研究 BSP SampleCode ShortPacket KEIL → GCC ✅ |
-| T001-ST2 | GCC Makefile 建立 + 編譯 44KB ✅ |
-| T001-ST3 | OpenOCD 燒錄 script 建立 ✅ |
-| T036 | Unit Test 知識庫（Unity/Ceedling/GoogleTest，17 檔，130+ 測試案例）✅ |
-| T037 | Microsoft USB Driver Samples 研究（firefly/USB/HID/Filter 架構）✅ |
+| T001 | USB 銴?鋆蔭嚗?擃???ICE 撌脩??湛?|
+| T002-T006 | 蝺刻陌?啣??penOCD?ID Tool |
+| T008-T012 | BSP ?游??eview?oolchain |
+| T014-T023 | NACK Retry?agic Numbers?uffer?uild 撘瑕? |
+| T024-T034 | ITM/SWO?SC Debug Channel?ART?lash?elf-Test?DB?WT |
+| T001-ST1 | ?弦 BSP SampleCode ShortPacket KEIL ??GCC ??|
+| T001-ST2 | GCC Makefile 撱箇? + 蝺刻陌 44KB ??|
+| T001-ST3 | OpenOCD ?? script 撱箇? ??|
+| T036 | Unit Test ?亥?摨恬?Unity/Ceedling/GoogleTest嚗?7 瑼?130+ 皜祈岫獢?嚗? |
+| T037 | Microsoft USB Driver Samples ?弦嚗irefly/USB/HID/Filter ?嗆?嚗? |
 
 ---
 
-## 🔄 進行中
-
-| 任務 | 負責 | 說明 |
+## ?? ?脰?銝?
+| 隞餃? | 鞎痊 | 隤芣? |
 |------|------|------|
-| **T001-ST4** | 🐱 Giroro / 🦀 Kururu | ⏳ 硬體燒錄驗證（等 power-cycle）|
+| **T001-ST4** | ? Giroro / ?? Kururu | ??蝖祇???撽?嚗? power-cycle嚗
 
 ---
 
-## ✅ 完成（知識庫擴展）
-
-| 任務 | 說明 |
+## ??摰?嚗霅澈?游?嚗?
+| 隞餃? | 隤芣? |
 |------|------|
-| **T036** | Unit Test 知識庫（Unity/Ceedling/GoogleTest，17 檔，130+ 測試案例）✅ |
-| **T037** | Microsoft USB Driver Samples 研究（firefly/USB/HID/Filter 架構）✅ |
-| **T038** | Linux FWUPD 韌體更新知識庫（22 檔，215KB）✅ |
-| **T039** | 文件驗收 ✅ 所有 Major 已修復（Minor 建議不阻礙通過）|
+| **T036** | Unit Test ?亥?摨恬?Unity/Ceedling/GoogleTest嚗?7 瑼?130+ 皜祈岫獢?嚗? |
+| **T037** | Microsoft USB Driver Samples ?弦嚗irefly/USB/HID/Filter ?嗆?嚗? |
+| **T038** | Linux FWUPD ???湔?亥?摨恬?22 瑼?215KB嚗? |
+| **T039** | ?辣撽 ?????Major 撌脖耨敺抬?Minor 撱箄降銝蝷?嚗
 
 ---
 
-## ⚠️ 待修復（Dororo 發現，T039 驗收阻礙）
-
-| 優先 | 問題 | 位置 |
+## ?? 敺耨敺抬?Dororo ?潛嚗039 撽?餌?嚗?
+| ?芸? | ?? | 雿蔭 |
 |------|------|------|
-| ~~**Major**~~ ✅ | SET_IDLE 指令格式矛盾 → **已修復** (`1e22b3b`) | TRANSLATION.md §1.6 |
-| ~~**Major**~~ ✅ | MLX90614 為 SMBus 裝置 → **已修復** (新增 ⚠️ 警告聲明) | EXAMPLE.md |
-| ~~**Major**~~ ✅ | HID Descriptor `wMaxInputLength=4` → **已修復** (改為 6) | EXAMPLE.md |
-| Minor | 內部連結路徑需修正（`../ICE/` → `../../ICE/`）| NuLink 文件 |
-| Minor | 外部 URL（Nuvoton 下載連結）需驗證，建議改用 GitHub BSP | M487_Usage_Guide.md |
-| Minor | SPEC.md 本地檔案路徑無法驗證 | SPEC.md |
+| ~~**Major**~~ ??| SET_IDLE ?誘?澆?? ??**撌脖耨敺?* (`1e22b3b`) | TRANSLATION.md 禮1.6 |
+| ~~**Major**~~ ??| MLX90614 ??SMBus 鋆蔭 ??**撌脖耨敺?* (?啣? ?? 霅血??脫?) | EXAMPLE.md |
+| ~~**Major**~~ ??| HID Descriptor `wMaxInputLength=4` ??**撌脖耨敺?* (?寧 6) | EXAMPLE.md |
+| Minor | ?折???頝臬??靽格迤嚗../ICE/` ??`../../ICE/`嚗 NuLink ?辣 |
+| Minor | 憭 URL嚗uvoton 銝????嚗?撽?嚗遣霅唳??GitHub BSP | M487_Usage_Guide.md |
+| Minor | SPEC.md ?砍瑼?頝臬??⊥?撽? | SPEC.md |
 
 ---
 
-## ⏸️ 待 Caro 手動確認
+## ?賂? 敺?Caro ??蝣箄?
 
-- **Power-cycle M487** → 檢查 USB MSC 枚舉（VID=0x0416, PID=0x0470）
-
+- **Power-cycle M487** ??瑼Ｘ USB MSC ??嚗ID=0x0416, PID=0x0470嚗?
 ---
 
-## ⏳ 待處理
-
-| 任務 | 負責 | 說明 |
+## ??敺???
+| 隞餃? | 鞎痊 | 隤芣? |
 |------|------|------|
-| **T040** | 🦀 Dororo | `hid_bridge`/`tool/hidtool_cpp` 文件審查 |
-| **T041** | 🦀 Dororo | 建置 + 測試驗證（依賴 T040）|
+| **T040** | ?? Dororo | `hid_bridge`/`tool/hidtool_cpp` ?辣撖拇 |
+| **T041** | ?? Dororo | 撱箇蔭 + 皜祈岫撽?嚗?鞈?T040嚗
 
 ---
 
-## Debug 整備矩陣 ✅
-
-| 等級 | 工具 | 狀態 |
+## Debug ?游??拚 ??
+| 蝑? | 撌亙 | ???|
 |------|------|------|
-| L1 | UART Log | ✅ |
-| L2 | MSC Debug Channel + CLI | ✅ |
-| L2 | hidtool | ✅ |
-| L3 | ICE + GDB | ✅ 已驗證 |
-| L3 | USB Filter Driver | ⏳ 需 WDK |
-| L4 | ITM/SWO + Viewer | ✅ |
-| L4 | Flash Error Log | ✅ |
-| L4 | Self-Test Mode | ✅ |
+| L1 | UART Log | ??|
+| L2 | MSC Debug Channel + CLI | ??|
+| L2 | hidtool | ??|
+| L3 | ICE + GDB | ??撌脤?霅?|
+| L3 | USB Filter Driver | ??? WDK |
+| L4 | ITM/SWO + Viewer | ??|
+| L4 | Flash Error Log | ??|
+| L4 | Self-Test Mode | ??|
 
 ---
 
 ## Enhancement Backlog
 
-| ID | 名稱 | 最後更新 | 狀態 |
+| ID | ?迂 | ?敺??| ???|
 |----|------|----------|------|
-| E001 | ICE_Breakthrough | 2026-03-30 | 🔄 實施中 |
+| E001 | ICE_Breakthrough | 2026-03-30 | ?? 撖行銝?|
 
 ---
 
-*T001-ST4 ⏸️ 等 Caro power-cycle。T036-T039 知識庫已完成，`hid_bridge/` + `tool/hidtool_cpp/` 已 commit。T040/T041 待 Dororo Review。*
+*T001-ST4 ?賂? 蝑?Caro power-cycle?036-T039 ?亥?摨怠歇摰?嚗hid_bridge/` + `tool/hidtool_cpp/` 撌?commit?040/T041 敺?Dororo Review??
