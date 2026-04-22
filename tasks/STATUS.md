@@ -1,6 +1,6 @@
 ﻿# M487_ScsiTool 隞餃?蝮質汗 / Status
 
-> ?敺?堆?2026-04-15 17:31
+> ?敺?堆?2026-04-22 08:41
 
 ---
 
@@ -96,3 +96,4 @@
 ---
 
 *T001-ST4 ?賂? 蝑?Caro power-cycle?036-T039 ?亥?摨怠歇摰?嚗hid_bridge/` + `tool/hidtool_cpp/` 撌?commit?040/T041 敺?Dororo Review??
+
